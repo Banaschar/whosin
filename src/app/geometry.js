@@ -1,6 +1,7 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
 import {Mesh} from 'three';
 import {scenePers} from './sceneHandler';
+import {createTooltipEvents} from './eventHandler';
 
 var models = [];
 var roomList = {};
@@ -23,7 +24,7 @@ function loadModel(modelName) {
         models.push(collada.scene);
         scenePers.add(collada.scene);
         _loadNodes();
-        //EventHandler.createEventHandlers();
+        createTooltipEvents(roomList);
 
     }, function (xhr) {
         console.log( (xhr.loaded / xhr.total * 100) + '% loaded');
@@ -42,7 +43,6 @@ function _loadNodes() {
     var _pat2 = /^apa/;
 
     for (node of models[0].children) {
-        
         if (!(node instanceof Mesh)) {
             continue;
         }
@@ -50,7 +50,6 @@ function _loadNodes() {
         //_nodeBounds[node.name] = new THREE.Box3().setFromObject(node);
         node.geometry.computeBoundingBox();
         _nodes[node.name] = node;
-
         _materialList[node.material.name] = node.material;
 
         if (_pat1.test(node.name)) {
@@ -71,7 +70,6 @@ function _loadNodes() {
         for (var key in roomList[floor]) {
             roomList[floor][key].material = roomList[floor][key].material.clone();
         }
-
     }
 }
 

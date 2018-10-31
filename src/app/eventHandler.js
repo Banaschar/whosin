@@ -1,7 +1,8 @@
 import {Vector3, Color} from "three";
-import {cameraPers, cameraOrtho, renderer} from "./sceneHandler";
+import {cameraPers, cameraOrtho, renderer, scenePers} from "./sceneHandler";
 import {rooms} from "./geometry";
-//import {tooltipSprite} from "./SpriteHandler";
+import {Interaction} from 'three.interaction';
+import {updateTooltip} from "./spriteHandler";
 
 var _domEvents
 
@@ -10,7 +11,7 @@ function onDocumentMouseMove(event) {
     var pos = new Vector3((event.clientX / window.innerWidth ) * 2 - 1,
                                 -(event.clientY / window.innerHeight ) * 2 + 1, 1);
     pos.unproject(cameraOrtho);
-    tooltipSprite.position.set(pos.x, pos.y - 20, 1);
+    toolTipSprite.position.set(pos.x, pos.y - 20, 1);
 }
 
 function onWindowResize() {
@@ -34,6 +35,28 @@ function initEventHandler() {
     //window.addEventListener('mousemove', onDocumentMouseMove, false);
     window.addEventListener('resize', onWindowResize, false);
 }
+
+
+function createTooltipEvents(geo) {
+    var interaction = new Interaction(renderer, scenePers, cameraPers);
+    for (var floor in geo) {
+        for (var key in geo[floor]) {
+            var thisRoom = geo[floor][key];
+            thisRoom.on('mouseover', (function(thisRoom) {
+                return function() {
+                    updateTooltip(thisRoom, true);
+                }
+            })(thisRoom));
+
+            thisRoom.on('mouseout', (function(thisRoom) {
+                return function() {
+                    updateTooltip(null, false);
+                }
+            })(thisRoom));
+        }
+    }
+}
+
 
 /*
 var createEventHandlers = function() {
@@ -60,4 +83,4 @@ var createEventHandlers = function() {
 };
 */
 
-export {initEventHandler};
+export {initEventHandler, createTooltipEvents};

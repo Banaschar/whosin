@@ -6,7 +6,7 @@ import {initEventHandler} from './eventHandler';
 import {initGui} from './guiHandler';
 import Stats from '../lib/stats.min';
 
-//test
+// TODO: Switch to precompressed model
 import MODEL from '../assets/Building1_ap_rooms_v3.dae';
 
 var stats;

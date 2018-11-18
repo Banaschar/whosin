@@ -1,6 +1,29 @@
 var _baseUrl = 'http://graphite-kom.srv.lrz.de/render/?target=';
 var data = {};
 var _ssid = ['eduroam', 'lrz', 'mwn-events', '@BayernWLAN', 'other'];
+// TODO: Combine with data
+var _timeListData = {};
+
+/*
+    Parses data and stores in [date,logins] pair list
+    - Right now only for graph display
+    TODO: Refactor to combine with the implementation in _handleSuccess
+*/
+function _parseData(csv, time, ap) {
+    var timeList = [];
+    var _tmp;
+    for (var i of csv) {
+        _tmp = i.split(",");
+        timeList.push([_tmp[1], (Number(_tmp[_tmp.length - 1]) || 0)]);
+    }
+
+    if (_timeListData.hasOwnProperty(time)) {
+        _timeListData[time][ap] = result;
+    } else {
+        _timeListData[time] = {};
+        _timeListData[time][ap] = timeList;
+    }
+}
 
 function _handleSuccess() {
     //this.callback.apply(this, this.arguments);
@@ -56,6 +79,14 @@ function getData(ap, timeframe) {
     var url = _buildRequest(ap, timeframe);
     _doRequest(url, ap, timeframe);
 }
+
+// Difficult, because I don't have per-room data. Still not enough data points which
+// room belongs to which ap
+/*
+function getNormalizedCapacity(time, ap) {
+    var values
+}
+*/
 
 function getNormalized(time, ap) {
     var values = data[time][ap];

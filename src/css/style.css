@@ -13,6 +13,7 @@
     font-size: 12px;
     line-height: 1.2;
     transition: opacity .5s;
+    /*
     &::before {
         content: '1';
         position: absolute;
@@ -27,9 +28,21 @@
         text-align: center;
         background: rgba(0, 0, 0, 0.8);
     }
+    */
 }
 
+/*
 #number {
     position: absolute;
     z-index: -1;
+}
+*/
+
+.graph {
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    width:400px;
+    height:400px;
 }

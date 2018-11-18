@@ -13,6 +13,21 @@ var roomSize = {
     'Room4170B': 50
 };
 
+var roomCap = {
+    'Room3170A': 18,
+    'Room3170B': 26,
+    'Room3140A': 31,
+    'Room3140B': 18,
+    'Room4120': 9,
+    'Room4124A': 0,
+    'Room4140A': 72,
+    'Room4140B': 26,
+    'Room4145-4151': 26,
+    'Room4168': 0,
+    'Room4170A': 18,
+    'Room4170B': 9
+};
+
 var roomAp = {
     'Room3170A': 'apa01-3bb',
     'Room3170B': 'apa01-3bb',

@@ -26,7 +26,10 @@ var _guiAttributes = {
     _setBackground: function() {
         SceneHandler.setBackground();
     },
-    _transparency: 1.0
+    _transparency: 1.0,
+    _displayGraph: function() {
+        Visualization.displayGraph();
+    }
 
 };
 
@@ -54,6 +57,7 @@ function initGui() {
     _guiVis.add(_guiAttributes, '_colorMap').name('Color Map');
     _guiVis.add(_guiAttributes, '_pillarMap').name('Pillar Map');
     _guiVis.add(_guiAttributes, '_apSphere').name('AP\'s');
+    _guiVis.add(_guiAttributes, '_displayGraph').name('Display Graph');
     _guiVis.open();
 
     var _guiGeo = _gui.addFolder('Geometry');

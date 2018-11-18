@@ -70,6 +70,7 @@ function updateTooltip(thisRoom, visible) {
         tooltipSprite.material.needsUpdate = true;
 
         // add text css
+        /*
         pos.project(cameraPers);
         pos.x = Math.round((0.5 + vector.x / 2) * 
                     (renderer.domElement.width / window.devicePixelRatio));
@@ -77,11 +78,12 @@ function updateTooltip(thisRoom, visible) {
                     (renderer.domElement.height / window.devicePixelRatio));
 
         div.innerHTML = thisRoom.name;
+        */
 
     } else {
         tooltipSprite.material.opacity = 0.0;
         tooltipSprite.material.needsUpdate = true;
-        console.log("Tooltip invisible");
+        //console.log("Tooltip invisible");
     }
 }
 

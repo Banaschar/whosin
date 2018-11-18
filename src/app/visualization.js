@@ -2,7 +2,10 @@ import {apList, roomList, setTransparency, hideGeometry} from "./geometry";
 import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color} from "three";
 import {scenePers} from "./sceneHandler";
 import * as AccessPoints from './apData';
-import * as DataHandler from './dataHandler'
+import * as DataHandler from './dataHandler';
+import * as Chartist from "chartist";
+import "../css/chartist.min.css";
+import "../css/style.css";
 
 var _colorMap = false;
 var _pillarMap = false;
@@ -48,7 +51,7 @@ function apSphere() {
         */
         makeTransparent('all', 0.6);
 
-        for (item of _sphereList) {
+        for (var item of _sphereList) {
             scenePers.add(item);
         }
         
@@ -64,13 +67,25 @@ function apSphere() {
 }
 
 /*
+    Other color map
+*/
+function _getColor(room) {
+    var colors = [0xffffb2, 0xfecc5c, 0xfd8d3c, 0xf03b20, 0xbd0026];
+    var num = DataHandler.getNormalized(_currentTime, AccessPoints.roomAp[room]);
+    num *= 4;
+    num = Math.floor(num);
+    return colors[num];
+}
+
+/*
     Get color between green and red
     Visualization._currentTime][AccessPoints.roomAp[room]
-*/
+
 function _getColor(room) {
     var hue = ((1 - DataHandler.getNormalized(_currentTime, AccessPoints.roomAp[room])) * 120).toString(10);
     return ["hsl(",hue,",100%,50%)"].join("");
 }
+*/
 
 /*
     Problems: If the room material is set to transparent, it's not showing through
@@ -166,6 +181,24 @@ function pillarMap() {
 
 }
 
+function displayGraph() {
+    var graphDiv = document.createElement("div");
+    graphDiv.setAttribute("id", "barGraph");
+    // add in style.css to make globally available and define only once
+    //graphDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;width:400;height:400'
+    graphDiv.classList.add('graph');
+    document.body.appendChild(graphDiv);
+    new Chartist.Bar('#barGraph', {
+        labels: ['Room1', 'Room2'],
+        series: [
+            [10, 20],
+            [3, 12]
+        ]
+    }, {
+        seriesBarDistance: 30
+    });
+}
+
 function makeTransparent(arg, opac) {
     var _material = [];
     switch (arg) {
@@ -200,4 +233,4 @@ function setCurrentTime(t) {
 }
 
 export {colorMap, pillarMap, apSphere, 
-        setCurrentFloor, setCurrentTime, hideFloors, makeTransparent}
+        setCurrentFloor, setCurrentTime, hideFloors, makeTransparent, displayGraph}

@@ -1,5 +1,5 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
-import {Mesh} from 'three';
+import {Mesh, MeshBasicMaterial} from 'three';
 import {scenePers} from './sceneHandler';
 import {createTooltipEvents} from './eventHandler';
 
@@ -11,6 +11,17 @@ var _hideList;
 var transparency = 1.0;
 var _materialList = {};
 var apList = {};
+
+/*
+// Dynamic textures to print room number on the top of room cube
+function _modifyTextures() {
+    var dynTexture = new DynamicTexture(256, 256);
+    //var mat = new MeshBasicMaterial({map: dynTexture.texture});
+    roomList['4']['4170A'].material.map = dynTexture;
+    dynTexture.drawText("4170A", 32, 256, 'black');
+    roomList['4']['4170A'].material.needsUpdate = true;
+}
+*/
 
 function loadModel(modelName) {
     /*
@@ -25,6 +36,9 @@ function loadModel(modelName) {
         scenePers.add(collada.scene);
         _loadNodes();
         createTooltipEvents(roomList);
+
+        // TODO: Refactor.
+        //_modifyTextures();
 
     }, function (xhr) {
         console.log( (xhr.loaded / xhr.total * 100) + '% loaded');

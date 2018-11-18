@@ -24,15 +24,21 @@ module.exports = {
     ],
     module: {
         rules: [
-            {
-                test: /\.(dae|png|jpg)$/,
-                use: [
-                    {
-                        loader: 'file-loader',
-                        options: {}
-                    }
-                ]
-            }
+                {
+                    test: /\.(dae|png|jpg)$/,
+                    use: [
+                        {
+                            loader: 'file-loader',
+                            options: {}
+                        }
+                    ]
+                }, {
+                    test: /\.css$/,
+                    use: [
+                        'style-loader',
+                        'css-loader'
+                    ]
+                }
         ]
     }
 };

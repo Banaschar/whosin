@@ -23,7 +23,8 @@ function initScene() {
 }
 
 function _initLight() {
-    _ambientLight = new AmbientLight(0xffffff, 1.0);
+    _ambientLight = new AmbientLight(0xffffff, 0.9);
+    //_ambientLight = new AmbientLight(0x666666, 0.85);
     _keyLight = new DirectionalLight(new Color('hsl(30, 100%, 75%)'), 1.0);
     _keyLight.position.set(-100, 0, 100);
 
@@ -67,7 +68,7 @@ function setBackground() {
     _switchBackground = !_switchBackground;
 
     if (_switchBackground) {
-        renderer.setClearColor(new Color("hsl(0, 0%, 10%)"));
+        renderer.setClearColor(new Color("hsl(0, 0%, 35%)"));
     } else {
         renderer.setClearColor(0xffffff, 0);
     }

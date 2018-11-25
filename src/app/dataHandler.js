@@ -1,3 +1,5 @@
+import * as ApData from './apData';
+
 var _baseUrl = 'http://graphite-kom.srv.lrz.de/render/?target=';
 var data = {};
 var _ssid = ['eduroam', 'lrz', 'mwn-events', '@BayernWLAN', 'other'];
@@ -86,7 +88,7 @@ function getData(ap, timeframe) {
 function getNormalizedCapacity(time, ap) {
     var values
 }
-*/
+
 
 function getNormalized(time, ap) {
     var values = data[time][ap];
@@ -95,6 +97,25 @@ function getNormalized(time, ap) {
     //console.log("Room: " + room + ". AVG: " + avg + ". MAX: " + max);
     return avg / max;
     //return values.reduce(function(a,b) {return a + b;}, 0) / Math.max.apply(null, values);
+}
+*/
+
+/*
+    Get normalized value of percentage of average logins for specified room
+*/
+function getNormalized(time, room) {
+    var _ap = ApData.roomAp[room];
+
+    var _sum = 0;
+    for (var i of ApData.apRooms[_ap]) {
+        _sum += ApData.roomCap[i];
+    }
+    var _perc = ApData.roomCap[room] / _sum;
+    var avg = data[time][_ap].reduce(
+                function(a,b) {return a + b;}, 0) / data[time][_ap].length;
+    var p = avg * _perc;
+    console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
+    return p / ApData.roomCap[room];
 }
 
 export {data, getData, getNormalized};

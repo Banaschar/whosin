@@ -43,8 +43,15 @@ var roomAp = {
     'Room4170B': 'apa03-4bb'
 };
 
+var apRooms = {
+    'apa01-3bb': ['Room3170A', 'Room3170B'],
+    'apa02-3bb': ['Room3140A', 'Room3140B'],
+    'apa01-4bb': ['Room4120', 'Room4124A', 'Room4140A', 'Room4140B'],
+    'apa03-4bb': ['Room4145-4151', 'Room4168', 'Room4170A', 'Room4170B']
+};
+
 var roomMax = {
     'Room3170A': 12
 }
 
-export {roomSize, roomMax, roomAp}
+export {roomSize, roomMax, roomAp, apRooms, roomCap}

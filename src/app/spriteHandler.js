@@ -17,6 +17,9 @@ function initSpriteHandler() {
     const startAngle = 0;
     const endAngle = Math.PI * 2;
 
+    // Set canvas size
+    //_canvas.height = 32;
+    //_canvas.width = 32;
     ctx.fillStyle = 'rgb(0, 0, 0)';
     ctx.beginPath();
     ctx.arc(x, y, radius, startAngle, endAngle);

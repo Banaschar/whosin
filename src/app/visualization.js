@@ -60,7 +60,7 @@ function apSphere() {
 
         makeTransparent('all', 1.0);
 
-        for (item of _sphereList) {
+        for (var item of _sphereList) {
             scenePers.remove(item);
         }
     }
@@ -71,7 +71,7 @@ function apSphere() {
 */
 function _getColor(room) {
     var colors = [0xffffb2, 0xfecc5c, 0xfd8d3c, 0xf03b20, 0xbd0026];
-    var num = DataHandler.getNormalized(_currentTime, AccessPoints.roomAp[room]);
+    var num = DataHandler.getNormalized(_currentTime, room);
     num *= 4;
     num = Math.floor(num);
     return colors[num];
@@ -157,7 +157,7 @@ function pillarMap() {
 
         } else {
             for (var roomKey in roomList[_floor]) {
-                var scale = 1 + DataHandler.getNormalized(_currentTime, AccessPoints.roomAp[roomKey]) * 2;
+                var scale = 1 + DataHandler.getNormalized(_currentTime, roomKey) * 2;
                 // Necessary to reverse scaling
                 _lastPillar[roomKey] = scale;
 

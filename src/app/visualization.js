@@ -1,11 +1,15 @@
 import {apList, roomList, setTransparency, hideGeometry} from "./geometry";
-import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color} from "three";
-import {scenePers} from "./sceneHandler";
+import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color, 
+        MeshNormalMaterial, CubeGeometry, CanvasTexture,
+        SpriteMaterial, Sprite, Geometry, Line, LineBasicMaterial,
+        Texture, DoubleSide, PlaneGeometry} from "three";
+import {scenePers, cameraPers, renderer, sceneOrtho} from "./sceneHandler";
 import * as AccessPoints from './apData';
 import * as DataHandler from './dataHandler';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
 import "../css/style.css";
+import {Lut} from 'three/examples/js/math/Lut'
 
 var _colorMap = false;
 var _pillarMap = false;
@@ -15,6 +19,145 @@ var _currentFloor = 'None';
 var _currentTime = 'None';
 var _lastFloor = 'None';
 var _lastPillar = {};
+var _lut;
+var _legendSprite;
+var _updateQueue = [];
+
+function createLegend() {
+    var numColors = 256;
+    var ticks = 5;
+    var maxEle = 100;
+    var map =  [[ 0.0, '0x0000FF' ], [ 0.2, '0x00FFFF' ], 
+            [ 0.5, '0x00FF00' ], [ 0.8, '0xFFFF00' ], 
+            [ 1.0, '0xFF0000' ]];
+    var legend = document.createElement('canvas');
+    var ctx = legend.getContext('2d');
+    legend.setAttribute('width', 1);
+    legend.setAttribute('height', numColors);
+
+    /*
+    // For usage as Bitmap
+    var texture = new CanvasTexture(legend);
+    var material = new SpriteMaterial({
+        map: texture
+    });
+    _legendSprite = new Sprite(material);
+    */
+    var imageData = ctx.getImageData(0, 0, 1, numColors);
+    var data = imageData.data;
+    var k = 0;
+    var step = 1.0 / numColors;
+
+    for ( var i = 1; i >= 0; i -= step ) {
+
+        for ( var j = map.length - 1; j >= 0; j -- ) {
+
+            if ( i < map[ j ][ 0 ] && i >= map[ j - 1 ][ 0 ] ) {
+
+                var min = map[ j - 1 ][ 0 ];
+                var max = map[ j ][ 0 ];
+
+                var minColor = new Color( 0xffffff ).setHex( map[ j - 1 ][ 1 ] );
+                var maxColor = new Color( 0xffffff ).setHex( map[ j ][ 1 ] );
+
+                var color = minColor.lerp( maxColor, ( i - min ) / ( max - min ) );
+
+                data[ k * 4 ] = Math.round( color.r * 255 );
+                data[ k * 4 + 1 ] = Math.round( color.g * 255 );
+                data[ k * 4 + 2 ] = Math.round( color.b * 255 );
+                data[ k * 4 + 3 ] = 255;
+
+                k += 1;
+
+            }
+
+        }
+
+    }
+
+    // Hacky: putImageData doesn't allow for scale, draw to new canvas instead
+    ctx.putImageData(imageData, 0, 0);
+    var destCanvas = document.createElement('canvas');
+    destCanvas.setAttribute('width', 28); //28
+    destCanvas.setAttribute('height', numColors); //256
+    var destCtx = destCanvas.getContext('2d');
+    destCtx.scale(28, 1);
+    destCtx.drawImage(legend, 0, 0);
+    //document.body.appendChild(destCanvas)
+    /*
+    //createImageBitmap not supported in Safari
+    var bit = createImageBitmap(imageData);
+    ctx.drawImage(bit, 28, 1);
+    document.body.appendChild(legend);
+    */
+
+    /*
+    // Usage as sprite. Maybe better performance, but harder to create text legend
+    _legendSprite.position.set(-900, 200, 1);
+    //_legendSprite.scale.set(1, 10, 1);
+    _legendSprite.scale.set(20, 400, 1);
+    sceneOrtho.add(_legendSprite);
+    */
+
+    /*
+        Draw text for Legend on seperate canvas 
+    */
+    var offsetX = 28;
+    var offsetY = 30;
+    var delta = numColors / (ticks - 1);
+    var deltaEle = Math.round(maxEle / (ticks - 1));
+    var legendText = document.createElement('canvas');
+    legendText.setAttribute('width', 300);
+    legendText.setAttribute('height', 300);
+    
+    legendText.setAttribute("id", "legendText");
+    var textCtx = legendText.getContext('2d');
+    textCtx.drawImage(destCanvas, 0, 30);
+    textCtx.font = "18px Arial";
+    textCtx.fillText("Average Usage [%]", 0, 18);
+    textCtx.font = "12px Arial";
+
+    for (var i = 0; i <= ticks - 1; i++) {
+        textCtx.moveTo(offsetX, Math.round(offsetY + i * delta));
+        textCtx.lineTo(50, Math.round(offsetY + i * delta));
+        textCtx.stroke();
+        var t = (ticks - 1 - i) * deltaEle;
+
+        if (i < ticks - 1) { 
+            textCtx.fillText(t.toString(), 52, Math.round(offsetY + i * delta) + 10);
+        } else {
+            textCtx.fillText(t.toString(), 52, Math.round(offsetY + i * delta));
+        }
+    }
+    
+    document.body.appendChild(legendText);
+}
+
+/*
+    If Legend is a Sprite, position has to be updated
+    TODO: Remove, not used
+*/
+function updateLegend() {
+    var pos = new Vector3((300 / window.innerWidth) + 2 - 1,
+                         (300 / window.innerHeight) * 2 + 1, 1);
+    pos.unproject(cameraPers);
+
+    pos.sub(cameraPers.position).normalize();
+    var distance = -cameraPers.position.z / pos.z;
+    pos.multiplyScalar(distance);
+    pos.add(cameraPers.position);
+
+    _legendSprite.position.set(pos.x, pos.y, pos.z);
+
+}
+
+function initColorMap() {
+    _lut = new Lut('rainbow', 256);
+    _lut.setMax(100);
+    _lut.setMin(0);
+
+    createLegend();
+}
 
 function apSphere() {
     _apSphere = !_apSphere;
@@ -67,8 +210,16 @@ function apSphere() {
 }
 
 /*
-    Other color map
+    Lut Color Map
 */
+function _getColor(room) {
+    var num = DataHandler.getNormalized(_currentTime, room);
+    return _lut.getColor(num * 100);
+}
+
+/*
+    Other color map
+
 function _getColor(room) {
     var colors = [0xffffb2, 0xfecc5c, 0xfd8d3c, 0xf03b20, 0xbd0026];
     var num = DataHandler.getNormalized(_currentTime, room);
@@ -76,7 +227,7 @@ function _getColor(room) {
     num = Math.floor(num);
     return colors[num];
 }
-
+*/
 /*
     Get color between green and red
     Visualization._currentTime][AccessPoints.roomAp[room]
@@ -98,7 +249,7 @@ function colorMap() {
 
     function __applyColor(floor, room) {
         roomList[floor][room].material.transparent = false;
-        roomList[floor][room].material.color = new Color(_getColor(room));
+        roomList[floor][room].material.color = _getColor(room);
         roomList[floor][room].material.needsUpdate = true;
     }
 
@@ -131,11 +282,56 @@ function colorMap() {
 }
 
 /*
-    TODO: Refactor scale implementation
+    TODO: Refactor scale implementation, use sub/multiply scalar etc.
+    THE Z coordinate for all rooms of a floor is the same!!!!
+    So I need to compute it only once, for gods sake!!!
 */
 function pillarMap() {
 
     _pillarMap = !_pillarMap;
+
+    var can = document.createElement('canvas');
+    can.width = 100;
+    can.height = 20;
+    var ctx = can.getContext('2d');
+    ctx.fillStyle = '#f00';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = 'bold 150px';
+
+    function __createLine(floor, room) {
+        var coord = new Vector3();
+        coord.copy(roomList[floor][room].geometry.boundingBox.max);
+        var lineMat = new LineBasicMaterial({
+            color: 0xffffff,
+            linewidth: 1
+        });
+        var geo = new Geometry();
+        geo.vertices.push(
+            new Vector3(0, 0, 0),
+            new Vector3(0, 20, 0),
+            new Vector3(20, 25, 20));
+        var line = new Line(geo, lineMat)
+        scenePers.add(line);
+        console.log('Coord: ' + coord.x + ', ' + coord.y + ', ' + coord.z);
+        line.position.set(coord.x, coord.z, coord.y);
+
+        // create text on line
+        ctx.fillText(room, can.width / 2, can.height / 2);
+        var texture = new Texture(can)
+        texture.needsUpdate = true;
+        var mat = new MeshBasicMaterial({
+                    map: texture, 
+                    overdraw: true, 
+                    side: DoubleSide});
+        var plane = new PlaneGeometry(100, 20);
+        var text = new Mesh(plane, mat);
+        text.position.set(coord.x + 20, coord.z + 30, coord.y + 10);
+        var axis = new Vector3(0, 1, 0);
+        var direction = new Vector3(20, 20, 5);
+        text.quaternion.setFromUnitVectors(axis, direction.normalize())
+        scenePers.add(text);
+    }
 
     function __createPillar(floor, room, scale) {
         roomList[floor][room].scale.set(1, 1, scale);
@@ -162,6 +358,7 @@ function pillarMap() {
                 _lastPillar[roomKey] = scale;
 
                 __createPillar(_floor, roomKey, scale);
+                __createLine(_floor, roomKey);
             }
         }
     } else {
@@ -232,5 +429,14 @@ function setCurrentTime(t) {
     _currentTime = t;
 }
 
+/*
+    Function that updates all objects added to update Queue
+*/
+function visualUpdate() {
+
+}
+
 export {colorMap, pillarMap, apSphere, 
-        setCurrentFloor, setCurrentTime, hideFloors, makeTransparent, displayGraph}
+        setCurrentFloor, setCurrentTime, 
+        hideFloors, makeTransparent, displayGraph,
+        visualUpdate, initColorMap, updateLegend}

@@ -30,6 +30,9 @@ var _guiAttributes = {
     _displayGraph: function() {
         Visualization.displayGraph();
     }
+    //_annotation: function() {
+    //    Visualization.annotation();
+    //}
 
 };
 
@@ -58,6 +61,7 @@ function initGui() {
     _guiVis.add(_guiAttributes, '_pillarMap').name('Pillar Map');
     _guiVis.add(_guiAttributes, '_apSphere').name('AP\'s');
     _guiVis.add(_guiAttributes, '_displayGraph').name('Display Graph');
+    //_guiVis.add(_guiAttributes, '_annotation').name('Annotate');
     _guiVis.open();
 
     var _guiGeo = _gui.addFolder('Geometry');

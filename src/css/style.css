@@ -1,3 +1,9 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
 .annotation {
     position: absolute;
     top: 0;
@@ -13,6 +19,7 @@
     font-size: 12px;
     line-height: 1.2;
     transition: opacity .5s;
+    /*
     &::before {
         content: '1';
         position: absolute;
@@ -27,11 +34,22 @@
         text-align: center;
         background: rgba(0, 0, 0, 0.8);
     }
+    */
 }
 
 #number {
+    content: '1';
     position: absolute;
-    z-index: -1;
+    top: -30px;
+    left: -30px;
+    width: 30px;
+    height: 30px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    font-size: 16px;
+    line-height: 30px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.8);
 }
 
 
@@ -42,4 +60,20 @@
     right:0;
     width:400px;
     height:400px;
+}
+
+.roomGraph {
+    position:absolut;
+}
+
+#legend {
+    position: absolute;
+    top: 100px;
+    left: 100px;
+}
+
+#legendText {
+    position: absolute;
+    top: 70px;
+    left: 90px;
 }

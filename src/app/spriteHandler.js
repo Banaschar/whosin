@@ -1,8 +1,13 @@
 import {Texture, SpriteMaterial, Sprite, CanvasTexture, Vector3} from "three";
 import {scenePers, cameraPers, renderer} from './sceneHandler';
+import * as Chartist from "chartist";
+import "../css/chartist.min.css";
+import "../css/style.css";
 
 var tooltipSprite;
 var div;
+var _div;
+var _textNode;
 
 function initSpriteHandler() {
     // init text box
@@ -11,15 +16,15 @@ function initSpriteHandler() {
     // init sprite
     const _canvas = document.createElement('canvas');
     const ctx = _canvas.getContext('2d');
-    const x = 32;
-    const y = 32;
-    const radius = 30;
+    const x = 32; //32
+    const y = 32; //32
+    const radius = 30; //30
     const startAngle = 0;
     const endAngle = Math.PI * 2;
 
     // Set canvas size
-    //_canvas.height = 32;
-    //_canvas.width = 32;
+    _canvas.height = 64;
+    _canvas.width = 64;
     ctx.fillStyle = 'rgb(0, 0, 0)';
     ctx.beginPath();
     ctx.arc(x, y, radius, startAngle, endAngle);
@@ -49,11 +54,12 @@ function initSpriteHandler() {
     tooltipSprite = new Sprite(_toolTipMaterial);
 
     tooltipSprite.position.set(250, 250, 250);
-    tooltipSprite.scale.set(35, 35, 1);
+    tooltipSprite.scale.set(5, 5, 5);
 
     scenePers.add(tooltipSprite);
 }
 
+// TODO: Combine with updateAnnotation (so I don't compute the location twice)
 function updateTooltip(thisRoom, visible) {
     if (visible) {
         tooltipSprite.material.opacity = 1.0;
@@ -62,6 +68,7 @@ function updateTooltip(thisRoom, visible) {
                         thisRoom.geometry.boundingBox.min);
         pos.multiplyScalar(0.5);
         pos.add(thisRoom.geometry.boundingBox.min);
+        cameraPers.updateMatrixWorld();
         pos.applyMatrix4(thisRoom.matrixWorld);
         tooltipSprite.position.set(pos.x, pos.y, pos.z);
         /*
@@ -132,4 +139,65 @@ function updateTooltip(text) {
 }
 */
 
-export {tooltipSprite, updateTooltip, initSpriteHandler};
+function displayGraph() {
+    var graphDiv = document.createElement("div");
+    graphDiv.setAttribute("id", "testG");
+    //graphDiv.style.width = 100;
+    //graphDiv.style.height = 100;
+    // add in style.css to make globally available and define only once
+    graphDiv.classList.add('roomGraph');
+    _div.appendChild(graphDiv);
+    new Chartist.Bar('#testG', {
+        labels: ['Room1', 'Room2'],
+        series: [
+            [10, 20],
+            [3, 12]
+        ]
+    }, {
+        seriesBarDistance: 30
+    });
+}
+
+function updateAnnotation(thisRoom, visible) {
+    if (visible) {
+        var pos = new Vector3();
+        pos.subVectors(thisRoom.geometry.boundingBox.max, 
+                        thisRoom.geometry.boundingBox.min);
+        pos.multiplyScalar(0.5);
+        pos.add(thisRoom.geometry.boundingBox.min);
+        
+        cameraPers.updateMatrixWorld();
+        pos.applyMatrix4(thisRoom.matrixWorld);
+
+        cameraPers.updateProjectionMatrix();
+        pos.project(cameraPers);
+        //console.log(pos.x.toString() + ', ' + pos.y.toString());
+        pos.x = (1 + pos.x) * window.innerWidth / 2;
+        pos.y = -(pos.y - 1) * window.innerHeight / 2;
+
+        _div.style.top = `${pos.y}px`;
+        _div.style.left = `${pos.x}px`;
+
+        _textNode.textContent = thisRoom.name;
+
+        _div.style.visibility = 'visible';
+    } else {
+        _div.style.visibility = 'hidden';
+    }
+}
+
+function initAnnotation() {
+    _div = document.createElement('div');
+    _div.classList.add('annotation');
+    
+    var para = document.createElement("p");
+    _textNode = document.createTextNode("This is new.");
+    para.appendChild(_textNode);
+    _div.appendChild(para);   
+    _div.style.visibility = 'hidden';
+    
+    document.body.appendChild(_div);  
+    displayGraph(); //TEST   
+}
+
+export {tooltipSprite, updateTooltip, initSpriteHandler, initAnnotation, updateAnnotation};

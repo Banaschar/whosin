@@ -1,24 +1,32 @@
 import {initScene, controls, renderer, 
         scenePers, sceneOrtho, cameraOrtho, cameraPers} from './sceneHandler';
 import {loadModel} from './geometry';
-import {initSpriteHandler} from './spriteHandler';
+import {initSpriteHandler, initAnnotation} from './spriteHandler';
 import {initEventHandler} from './eventHandler';
 import {initGui} from './guiHandler';
+import {visualUpdate, initColorMap, updateLegend} from './visualization';
 import Stats from '../lib/stats.min';
 
 // TODO: Switch to precompressed model
 import MODEL from '../assets/Building1_ap_rooms_v3.dae';
 
 var stats;
+
+/*
+    TODO: appenChild directly to document.body
+*/
 function init() {
     var container = document.createElement('div');
     document.body.appendChild(container);
 
     initScene();
     loadModel(MODEL);
+    // TODO: Combine sprite and annotation init methods
     initSpriteHandler();
+    initAnnotation();
     initEventHandler();
     initGui();
+    initColorMap();
 
     stats = new Stats();
 
@@ -26,6 +34,10 @@ function init() {
     container.appendChild(stats.dom);
 }
 
+/*
+    TODO: Refactor updateLegend() -> Move to sprite handler or use visualUpdate
+    ---> Better yet, refactor it all into SpriteHandler and rename it to visuals or so
+*/
 function render() {
     requestAnimationFrame(render);
     controls.update();
@@ -34,6 +46,8 @@ function render() {
     renderer.clearDepth();
     renderer.render(sceneOrtho, cameraOrtho);
     stats.update();
+    //visualUpdate();
+    //updateLegend();
 }
 
 export {init, render};

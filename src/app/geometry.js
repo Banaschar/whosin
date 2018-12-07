@@ -23,6 +23,7 @@ function _modifyTextures() {
 }
 */
 
+
 function loadModel(modelName) {
     /*
     var loadingManager = new THREE.LoadingManager( function() {
@@ -32,11 +33,11 @@ function loadModel(modelName) {
 
     var caloader = new ColladaLoader();
     caloader.load(modelName, function (collada) {
+        //console.log(collada);
         models.push(collada.scene);
         scenePers.add(collada.scene);
         _loadNodes();
         createTooltipEvents(roomList);
-
         // TODO: Refactor.
         //_modifyTextures();
 
@@ -49,7 +50,7 @@ function loadModel(modelName) {
 /* 
     loads the room nodes (and some specific walls, remove after testing)
     Refactor after initial tests, to provide list of stuff to seatch for
-    -> Addd material list, in which to store all materials used
+    -> Add material list, in which to store all materials used
 */
 function _loadNodes() {
     var node;
@@ -83,6 +84,7 @@ function _loadNodes() {
     for (var floor in roomList) {
         for (var key in roomList[floor]) {
             roomList[floor][key].material = roomList[floor][key].material.clone();
+            //console.log(roomList[floor][key].material);
         }
     }
 }

@@ -2,7 +2,7 @@ import {Vector3, Color} from "three";
 import {cameraPers, cameraOrtho, renderer, scenePers} from "./sceneHandler";
 import {rooms} from "./geometry";
 import {Interaction} from 'three.interaction';
-import {updateTooltip} from "./spriteHandler";
+import {updateTooltip, updateAnnotation} from "./spriteHandler";
 
 var _domEvents
 
@@ -45,12 +45,14 @@ function createTooltipEvents(geo) {
             thisRoom.on('mouseover', (function(thisRoom) {
                 return function() {
                     updateTooltip(thisRoom, true);
+                    updateAnnotation(thisRoom, true);
                 }
             })(thisRoom));
 
             thisRoom.on('mouseout', (function(thisRoom) {
                 return function() {
                     updateTooltip(null, false);
+                    updateAnnotation(null, false);
                 }
             })(thisRoom));
         }

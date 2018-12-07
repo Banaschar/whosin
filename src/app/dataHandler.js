@@ -104,6 +104,10 @@ function getNormalized(time, ap) {
     Get normalized value of percentage of average logins for specified room
 */
 function getNormalized(time, room) {
+    if (ApData.roomCap[room] === 0) {
+        return 0;
+    }
+
     var _ap = ApData.roomAp[room];
 
     var _sum = 0;
@@ -114,7 +118,7 @@ function getNormalized(time, room) {
     var avg = data[time][_ap].reduce(
                 function(a,b) {return a + b;}, 0) / data[time][_ap].length;
     var p = avg * _perc;
-    console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
+    //console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
     return p / ApData.roomCap[room];
 }
 

@@ -37,6 +37,27 @@ body {
     */
 }
 
+.ct-label {
+    color: #ffffff;
+}
+
+/*
+.ct-chart .ct-series.ct-series-a .ct-bar[ct|meta="category5"] {
+    stroke: blue;
+}
+*/
+
+.ct-series .ct-bar {
+    /*stroke: red;*/
+    stroke-width: 20px;
+}
+
+.ct-target-line {
+    stroke: blue;
+    stroke-width: 2px;
+    stroke-dasharray: 4px;
+}
+
 #number {
     content: '1';
     position: absolute;
@@ -52,13 +73,16 @@ body {
     background: rgba(0, 0, 0, 0.8);
 }
 
+#barGraph {
+    stroke-width: 60px;
+}
 
 .graph {
     position:fixed;
     bottom:0;
     left:0;
     right:0;
-    width:400px;
+    width:800px;
     height:400px;
 }
 

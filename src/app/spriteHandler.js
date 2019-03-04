@@ -1,5 +1,6 @@
 import {Texture, SpriteMaterial, Sprite, CanvasTexture, Vector3} from "three";
 import {scenePers, cameraPers, renderer} from './sceneHandler';
+import {totalAvgPerDay, hasData} from './dataHandler'
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
 import "../css/style.css";
@@ -8,6 +9,8 @@ var tooltipSprite;
 var div;
 var _div;
 var _textNode;
+var _roomGraph = {};
+var _graphDiv;
 
 function initSpriteHandler() {
     // init text box
@@ -138,24 +141,51 @@ function updateTooltip(text) {
     }
 }
 */
+function _projectY(chartRect, bounds, value) {
+  return chartRect.y1 - 
+    (chartRect.height() * (value - bounds.min) / (bounds.range + bounds.step));
+}
 
-function displayGraph() {
-    var graphDiv = document.createElement("div");
-    graphDiv.setAttribute("id", "testG");
-    //graphDiv.style.width = 100;
-    //graphDiv.style.height = 100;
-    // add in style.css to make globally available and define only once
-    graphDiv.classList.add('roomGraph');
-    _div.appendChild(graphDiv);
-    new Chartist.Bar('#testG', {
-        labels: ['Room1', 'Room2'],
-        series: [
-            [10, 20],
-            [3, 12]
-        ]
+function _createGraph(room) {
+    var chart = new Chartist.Bar('#roomGraph', {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        series: totalAvgPerDay(room)
     }, {
-        seriesBarDistance: 30
+        distributeSeries: true,
+        targetLine: {
+            value: 4.5,
+            class: 'ct-target-line'
+        }
     });
+    chart.on('created', function(context) {
+        var targetLineY = project(context.chartRect, context.bounds, context.options.targetLine.value);
+
+        context.svg.elem('line', {
+            x1: context.chartRect.x1,
+            x2: context.chartRect.x2,
+            y1: targetLineY,
+            y2: targetLineY
+        }, context.options.targetLine.class);
+    });
+}
+
+/*
+function _createGraph(room) {
+    new Chartist.Bar('#annotGraph', {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+        series: totalAvgPerDay(room)
+    }, {
+        distributeSeries: true
+    });
+}
+*/
+
+function _setGraph(room) {
+    if (_roomGraph.hasOwnProperty(room)) {
+        return _roomGraph[room];
+    } else {
+        return _createGraph(room);
+    }
 }
 
 function updateAnnotation(thisRoom, visible) {
@@ -180,6 +210,10 @@ function updateAnnotation(thisRoom, visible) {
 
         _textNode.textContent = thisRoom.name;
 
+        if (hasData()) {
+            _graphDiv = _createGraph(thisRoom.name);
+        }
+
         _div.style.visibility = 'visible';
     } else {
         _div.style.visibility = 'hidden';
@@ -196,8 +230,12 @@ function initAnnotation() {
     _div.appendChild(para);   
     _div.style.visibility = 'hidden';
     
-    document.body.appendChild(_div);  
-    displayGraph(); //TEST   
+    document.body.appendChild(_div); 
+    _graphDiv = document.createElement("div");
+    _graphDiv.setAttribute("id", "roomGraph");
+    _graphDiv.classList.add('ct-chart');
+   
+    _div.appendChild(_graphDiv);  
 }
 
 export {tooltipSprite, updateTooltip, initSpriteHandler, initAnnotation, updateAnnotation};

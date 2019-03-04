@@ -5,6 +5,7 @@ import {createTooltipEvents} from './eventHandler';
 
 var models = [];
 var roomList = {};
+var roomListString = [];
 var _nodes = {};
 var _hidden = false;
 var _hideList;
@@ -68,6 +69,7 @@ function _loadNodes() {
         _materialList[node.material.name] = node.material;
 
         if (_pat1.test(node.name)) {
+            roomListString.push(node.name);
             var _floor = (node.name.match(/\d+/g))[0].charAt(0);
             if (roomList.hasOwnProperty(_floor)) {
                 roomList[_floor][node.name] = node;
@@ -81,9 +83,11 @@ function _loadNodes() {
     }
 
     // Give each room a different material, so colors can be set individualy
+    var meshBasic = new MeshBasicMaterial({color: 0x777777});
     for (var floor in roomList) {
         for (var key in roomList[floor]) {
-            roomList[floor][key].material = roomList[floor][key].material.clone();
+            //roomList[floor][key].material = roomList[floor][key].material.clone();
+            roomList[floor][key].material = meshBasic.clone();
             //console.log(roomList[floor][key].material);
         }
     }
@@ -144,4 +148,4 @@ function hideGeometry(_height) {
     }
 }
 
-export {loadModel, hideGeometry, setTransparency, makeTransparent, roomList, apList};
+export {loadModel, hideGeometry, setTransparency, makeTransparent, roomList, roomListString, apList};

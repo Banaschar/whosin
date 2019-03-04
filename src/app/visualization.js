@@ -1,4 +1,4 @@
-import {apList, roomList, setTransparency, hideGeometry} from "./geometry";
+import {apList, roomList, setTransparency, hideGeometry, roomListString} from "./geometry";
 import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color, 
         MeshNormalMaterial, CubeGeometry, CanvasTexture,
         SpriteMaterial, Sprite, Geometry, Line, LineBasicMaterial,
@@ -9,11 +9,12 @@ import * as DataHandler from './dataHandler';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
 import "../css/style.css";
-import {Lut} from 'three/examples/js/math/Lut'
+import {Lut} from 'three/examples/js/math/Lut';
 
 var _colorMap = false;
 var _pillarMap = false;
 var _apSphere = false;
+var _graph = false;
 var _sphereList = [];
 var _currentFloor = 'None';
 var _currentTime = 'None';
@@ -22,6 +23,8 @@ var _lastPillar = {};
 var _lut;
 var _legendSprite;
 var _updateQueue = [];
+var _tmpPillarGeometry = [];
+var _graphDiv;
 
 function createLegend() {
     var numColors = 256;
@@ -212,11 +215,13 @@ function apSphere() {
 /*
     Lut Color Map
 */
+/*
 function _getColor(room) {
-    var num = DataHandler.getNormalized(_currentTime, room);
-    return _lut.getColor(num * 100);
+    var num = DataHandler.getNormalized(room);
+    console.log(num);
+    return _lut.getColor(50);
 }
-
+*/
 /*
     Other color map
 
@@ -231,12 +236,30 @@ function _getColor(room) {
 /*
     Get color between green and red
     Visualization._currentTime][AccessPoints.roomAp[room]
-
+*/
+/*
 function _getColor(room) {
-    var hue = ((1 - DataHandler.getNormalized(_currentTime, AccessPoints.roomAp[room])) * 120).toString(10);
+    var hue = ((1 - DataHandler.getNormalized(room)) * 120).toString(10);
     return ["hsl(",hue,",100%,50%)"].join("");
 }
 */
+
+
+function _getColor(room) {
+    var perc = 100 - DataHandler.getNormalized(room) * 100;
+    var r, g, b = 0;
+    if(perc < 50) {
+        r = 255;
+        g = Math.round(5.1 * perc);
+    }
+    else {
+        g = 255;
+        r = Math.round(510 - 5.10 * perc);
+    }
+    var h = r * 0x10000 + g * 0x100 + b * 0x1;
+    return '#' + ('000000' + h.toString(16)).slice(-6);
+}
+
 
 /*
     Problems: If the room material is set to transparent, it's not showing through
@@ -249,7 +272,9 @@ function colorMap() {
 
     function __applyColor(floor, room) {
         roomList[floor][room].material.transparent = false;
-        roomList[floor][room].material.color = _getColor(room);
+        roomList[floor][room].material.color = new Color(_getColor(room));
+        console.log(roomList[floor][room].material);
+        //roomList[floor][room].material.color.setHex(_getColor(room));
         roomList[floor][room].material.needsUpdate = true;
     }
 
@@ -299,6 +324,12 @@ function pillarMap() {
     ctx.textBaseline = "middle";
     ctx.font = 'bold 150px';
 
+    function __removeLines() {
+        for (var ele of _tmpPillarGeometry) {
+            scenePers.remove(ele);
+        }
+    }
+
     function __createLine(floor, room) {
         var coord = new Vector3();
         coord.copy(roomList[floor][room].geometry.boundingBox.max);
@@ -331,6 +362,7 @@ function pillarMap() {
         var direction = new Vector3(20, 20, 5);
         text.quaternion.setFromUnitVectors(axis, direction.normalize())
         scenePers.add(text);
+        _tmpPillarGeometry.push(text, line);
     }
 
     function __createPillar(floor, room, scale) {
@@ -346,6 +378,7 @@ function pillarMap() {
 
     if (_pillarMap) {
         _lastPillar = {};
+        _tmpPillarGeometry = [];
         var _floor = _currentFloor;
         _lastFloor = _floor;
         if (_floor === 'None') {
@@ -353,12 +386,12 @@ function pillarMap() {
 
         } else {
             for (var roomKey in roomList[_floor]) {
-                var scale = 1 + DataHandler.getNormalized(_currentTime, roomKey) * 2;
+                var scale = 1 + DataHandler.getNormalized(roomKey) * 4;
                 // Necessary to reverse scaling
                 _lastPillar[roomKey] = scale;
 
                 __createPillar(_floor, roomKey, scale);
-                __createLine(_floor, roomKey);
+                //__createLine(_floor, roomKey);
             }
         }
     } else {
@@ -373,11 +406,42 @@ function pillarMap() {
             //console.log("ROOM: " + roomKey + ". Height: " + height + ". Middle: " + middle);
             roomList[_lastFloor][roomKey].position.z -= (((height * scale) - height) / 2 - (middle * scale - middle));
         }
+        //__removeLines();
         
     }   
 
 }
 
+
+function displayGraph() {
+    if (DataHandler.hasData()) {
+        _graph = !_graph;
+        if (_graph) {
+            if (_graphDiv === undefined) {
+                _graphDiv = document.createElement("div");
+                _graphDiv.setAttribute("id", "barGraph");
+                _graphDiv.classList.add('graph');
+                document.body.appendChild(_graphDiv);
+            }
+
+            var _label = [];
+            var _values = [];
+            for (var room of roomListString) {
+                _label.push(room.substring(4, ));
+                _values.push(DataHandler.getNormalized(room) * 100);
+            }
+
+            new Chartist.Bar('#barGraph', {
+                labels: _label,
+                series: _values
+            }, {
+                distributeSeries: true
+            });
+        }
+    }
+}
+
+/*
 function displayGraph() {
     var graphDiv = document.createElement("div");
     graphDiv.setAttribute("id", "barGraph");
@@ -395,6 +459,31 @@ function displayGraph() {
         seriesBarDistance: 30
     });
 }
+*/
+
+/*
+function displayGraph() {
+    _series = [];
+    for (var key in DataHandler.roomData) {
+        _series.append(DataHandler.roomData[key]);
+    }
+    var graphDiv = document.createElement("div");
+    graphDiv.setAttribute("id", "lineGraph");
+    // add in style.css to make globally available and define only once
+    //graphDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;width:400;height:400'
+    graphDiv.classList.add('graph');
+    document.body.appendChild(graphDiv);
+    new Chartist.Line('#lineGraph', {
+        labels: DataHandler.hackKeys,
+        series: _series
+    }, {
+        plugins: [
+        Chartist.plugins.legend({
+            legendNames: Object.keys(DataHandler.roomData),
+        })]
+    });
+}
+*/
 
 function makeTransparent(arg, opac) {
     var _material = [];

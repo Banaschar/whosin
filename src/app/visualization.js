@@ -1,10 +1,11 @@
-import {apList, roomList, setTransparency, hideGeometry, roomListString} from "./geometry";
+import {apList, roomList, setTransparency, hideGeometry,
+        moveGeometry, roomListString} from "./geometry";
 import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color, 
         MeshNormalMaterial, CubeGeometry, CanvasTexture,
         SpriteMaterial, Sprite, Geometry, Line, LineBasicMaterial,
         Texture, DoubleSide, PlaneGeometry} from "three";
 import {scenePers, cameraPers, renderer, sceneOrtho} from "./sceneHandler";
-import * as AccessPoints from './apData';
+
 import * as DataHandler from './dataHandler';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
@@ -273,7 +274,7 @@ function colorMap() {
     function __applyColor(floor, room) {
         roomList[floor][room].material.transparent = false;
         roomList[floor][room].material.color = new Color(_getColor(room));
-        console.log(roomList[floor][room].material);
+        //console.log(roomList[floor][room].material);
         //roomList[floor][room].material.color.setHex(_getColor(room));
         roomList[floor][room].material.needsUpdate = true;
     }
@@ -485,6 +486,9 @@ function displayGraph() {
 }
 */
 
+/*
+ * TODO: Change to make all geometry transparent
+ */
 function makeTransparent(arg, opac) {
     var _material = [];
     switch (arg) {
@@ -510,6 +514,10 @@ function hideFloors() {
     }
 }
 
+function splitBuilding() {
+    moveGeometry();
+}
+
 function setCurrentFloor(f) {
     _currentFloor = f;
 }
@@ -528,4 +536,5 @@ function visualUpdate() {
 export {colorMap, pillarMap, apSphere, 
         setCurrentFloor, setCurrentTime, 
         hideFloors, makeTransparent, displayGraph,
-        visualUpdate, initColorMap, updateLegend}
+        visualUpdate, initColorMap, updateLegend,
+        splitBuilding}

@@ -1,5 +1,5 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
-import {Mesh, MeshBasicMaterial} from 'three';
+import {Mesh, MeshBasicMaterial, LoadingManager, MeshLambertMaterial} from 'three';
 import {scenePers} from './sceneHandler';
 import {createTooltipEvents} from './eventHandler';
 
@@ -24,17 +24,43 @@ function _modifyTextures() {
 }
 */
 
+/*
+function _initLoadingManager() {
+    var manager = new LoadingManager();
+    var bar = document.createElement("div");
+    bar.setAttribute("id", "loadingBar");
+    var overlay = document.createElement("div");
+    overlay.setAttribute("id", "loadingScreen");
+    var progress = document.createElement("span");
+    progress.setAttribute("id", "progress");
+    bar.appendChild(progress);
+    overlay.appendChild(bar);
+    document.body.appendChild(overlay);
 
-function loadModel(modelName) {
-    /*
-    var loadingManager = new THREE.LoadingManager( function() {
-        models.push()
-    });
-    */
+    manager.onLoad = function() {
+        overlay.classList.add('loadingScreenHidden');
+        progress.style.width = 0;
+    };
 
-    var caloader = new ColladaLoader();
+    manager.onProgress = function(xhr) {
+        progress.style.width = xhr.loaded / xhr.total * 100 + '%';
+    };
+
+    manager.onError = function(e) {
+        console.error(e);
+        progress.style.backgroundColor = 'red';
+    };
+
+    return manager;
+}
+*/
+
+
+function loadModel(modelName, manager) {
+    //var manager = _initLoadingManager();
+    manager.setup('Loading Building...');
+    var caloader = new ColladaLoader(manager);
     caloader.load(modelName, function (collada) {
-        //console.log(collada);
         models.push(collada.scene);
         scenePers.add(collada.scene);
         _loadNodes();
@@ -42,12 +68,14 @@ function loadModel(modelName) {
         // TODO: Refactor.
         //_modifyTextures();
 
-    }, function (xhr) {
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded');
-    });
+    }, manager.onProgress, manager.onError);
 
 }
-
+/*
+function (xhr) {
+        console.log( (xhr.loaded / xhr.total * 100) + '% loaded');
+    }
+*/
 /* 
     loads the room nodes (and some specific walls, remove after testing)
     Refactor after initial tests, to provide list of stuff to seatch for
@@ -83,7 +111,10 @@ function _loadNodes() {
     }
 
     // Give each room a different material, so colors can be set individualy
-    var meshBasic = new MeshBasicMaterial({color: 0x777777});
+    // MeshBasicMaterial
+    // MeshLambertMaterial
+    var meshBasic = new MeshLambertMaterial({color: 0x777777,
+                                          transparent: true, opacity: 0.5});
     for (var floor in roomList) {
         for (var key in roomList[floor]) {
             //roomList[floor][key].material = roomList[floor][key].material.clone();
@@ -124,6 +155,7 @@ function setTransparency(mat, opac) {
 /*
     Hide floors above current. Needs an argument later
     Still hacky, uses predefined roomList for floor 3 and 4 to get height
+    TODO: Maybe change to use Material.clippingPlanes
 */
 function hideGeometry(_height) {
     if (_hidden) {
@@ -148,4 +180,22 @@ function hideGeometry(_height) {
     }
 }
 
-export {loadModel, hideGeometry, setTransparency, makeTransparent, roomList, roomListString, apList};
+function moveGeometry() {
+    //console.log(Object.keys(roomList["3"])[0]);
+    
+    var _height1 = roomList["3"][Object.keys(roomList["3"])[0]].geometry.boundingBox.min.z;
+    var _height2 = roomList["3"][Object.keys(roomList["3"])[0]].geometry.boundingBox.max.z;
+
+    for (var key in _nodes) {
+        if (_nodes[key].geometry.boundingBox.min.z >= _height1-1 &&
+            _nodes[key].geometry.boundingBox.max.z <= _height2) {
+            _nodes[key].translateX(60);
+            _nodes[key].translateZ(- _nodes[key].geometry.boundingBox.min.z);
+        }
+    }
+    
+
+}
+
+export {loadModel, hideGeometry, setTransparency, makeTransparent, 
+        roomList, roomListString, apList, moveGeometry};

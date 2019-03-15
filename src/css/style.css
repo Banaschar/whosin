@@ -48,7 +48,7 @@ body {
 */
 
 .ct-series .ct-bar {
-    /*stroke: red;*/
+    stroke: red;
     stroke-width: 20px;
 }
 
@@ -93,11 +93,47 @@ body {
 #legend {
     position: absolute;
     top: 100px;
-    left: 100px;
+    left: 10px;
 }
 
 #legendText {
     position: absolute;
     top: 70px;
-    left: 90px;
+    left: 20px;
+}
+
+#loadingScreen {
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    /*align-items: center;*/
+}
+
+
+.loadingScreenHidden {
+    display: none !important;
+}
+
+
+#loadingBar {
+    width: 25em;
+    height: 1em;
+    border-radius: 0.25em;
+    background-color: black;
+
+    border: 1px solid grey;
+
+    display: inline-flex;
+}
+
+#progress {
+  background-color: #75b800;
+  height: inherit;
+  border-radius: inherit;
+
+  width: 5%;
 }

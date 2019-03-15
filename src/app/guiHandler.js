@@ -29,6 +29,9 @@ var _guiAttributes = {
     _transparency: 1.0,
     _displayGraph: function() {
         Visualization.displayGraph();
+    },
+    _splitBuilding: function() {
+        Visualization.splitBuilding();
     }
     //_annotation: function() {
     //    Visualization.annotation();
@@ -51,9 +54,7 @@ function initGui() {
                     if (newValue === 'None') {
                         console.log('None');
                     } else {
-                        for (var key in Geometry.apList) {
-                            DataHandler.getData(key, _timeDict[newValue]);
-                        }
+                        DataHandler.getData(Geometry.apList, _timeDict[newValue]);
                     }
                     Visualization.setCurrentTime(_timeDict[newValue]);
                 }).name('Time');
@@ -76,6 +77,7 @@ function initGui() {
                 function(newValue) {
                     Visualization.makeTransparent(_guiAttributes._transparent, newValue);
                 });
+    _guiGeo.add(_guiAttributes, '_splitBuilding').name('Split Building');
     _guiGeo.open();
 
     var _guiScene = _gui.addFolder('Scene');

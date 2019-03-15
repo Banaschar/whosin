@@ -33,7 +33,6 @@ function _initLight() {
 
     _fillLight = new DirectionalLight(new Color('hsl(240, 100%, 75%)'), 0.75);
     _fillLight.position.set(100, 0, 100);
-
     _backLight = new DirectionalLight(0xffffff, 1.0);
     _backLight.position.set(100, 0, -100).normalize();
 }

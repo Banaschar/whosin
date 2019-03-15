@@ -6,6 +6,11 @@ var _ssid = ['eduroam', 'lrz', 'mwn-events', '@BayernWLAN', 'other'];
 // TODO: Combine with data
 var _timeListData = {};
 var roomData = {};
+var _loadingManager;
+
+function initDataHandler(manager) {
+    _loadingManager = manager;
+}
 
 /*
     Parses data and stores in [date,logins] pair list
@@ -77,11 +82,16 @@ function _handleError() {
     console.error(this.statusText);
 }
 
+function _prog(oEvent) {
+    console.log(oEvent.loaded / oEvent.total * 100);
+}
+
 function _doRequest(url, ap, timeframe) {
     var req = new XMLHttpRequest();
     req.arguments = Array.prototype.slice.call(arguments, 1);
     req.onload = _handleSuccess;
     req.onerror = _handleError;
+    req.onprogress = _loadingManager.onProgress;
     //console.log(url);
     req.open("GET", url, true);
     req.send(null);
@@ -98,9 +108,14 @@ function _buildRequest(ap, timeframe) {
 
 }
 
-function getData(ap, timeframe) {
-    var url = _buildRequest(ap, timeframe);
-    _doRequest(url, ap, timeframe);
+function getData(aps, timeframe) {
+    for (var ap in aps) {
+        _loadingManager.setup('Loading ' + ap + ' data...')
+        var url = _buildRequest(ap, timeframe);
+        _doRequest(url, ap, timeframe);
+    }
+    //_loadingManager.onLoad();
+    
 }
 
 // Difficult, because I don't have per-room data. Still not enough data points which
@@ -131,7 +146,7 @@ function getNormalized(time, ap) {
  * per Room average data for each day
  */
 function calcPerRoom(ap) {
-    for (var room of ApData.apRooms[ap]) {
+    for (var room of ApData.getApRooms(ap)) {
         roomData[room] = avgPerDay(room);
     }
     //console.log(roomData[room]);
@@ -142,7 +157,7 @@ function calcPerRoom(ap) {
  * With value a percentage of total average by room capacity compared to total
  */
 function avgPerDay(room) {
-    var ap = ApData.roomAp[room];
+    var ap = ApData.getRoomAp(room);
     var _perc = getRoomPercentage(ap, room);
     var curr = _timeListData[ap]["time"][0];
     var count = 0;
@@ -209,7 +224,7 @@ function cleanData(ap) {
 
     var _roomPerc = {}
     perDay[ap] = {};
-    for (var croom of ApData.apRooms[ap]) {
+    for (var croom of ApData.getApRooms(ap)) {
         // get normalized room value by cap
         _roomPerc[croom] = getRoomPercentage(ap, croom);
         roomData[croom] = [];
@@ -236,7 +251,7 @@ function cleanData(ap) {
     })
     // Get data per room here, or somewhere else?
     for (var key in _keys) {
-        for (var c of ApData.apRooms[ap]) {
+        for (var c of ApData.getApRooms(ap)) {
             roomData[croom].append(_roomPerc[c] * perDay[ap][key]);
         }
     }
@@ -249,31 +264,31 @@ function cleanData(ap) {
 */
 function getRoomPercentage(ap, room) {
     var _sum = 0;
-    for (var i of ApData.apRooms[ap]) {
-        _sum += ApData.roomCap[i];
+    for (var i of ApData.getApRooms(ap)) {
+        _sum += ApData.getRoomCapacity(i);
     }
-    return ApData.roomCap[room] / _sum;
+    return ApData.getRoomCapacity(room) / _sum;
 }
 
 /*
     Get normalized value of percentage of average logins for specified room
 */
 function getNormalized(room) {
-    if (ApData.roomCap[room] === 0) {
+    if (ApData.getRoomCapacity(room) === 0) {
         return 0;
     }
-    var _ap = ApData.roomAp[room];
+    var _ap = ApData.getRoomAp(room);
 
     var avg = roomData[room]["max"].reduce(
                 function(a,b) {return a + b;}, 0) / roomData[room]["max"].length;
     var p = avg * getRoomPercentage(_ap, room);
     //console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
     // Normalize on room capacity
-    return p / ApData.roomCap[room];
+    return p / ApData.getRoomCapacity(room);
 }
 
 function hasData() {
     return Object.keys(roomData).length != 0;
 }
 
-export {data, getData, getNormalized, roomData, totalAvgPerDay, hasData};
+export {data, getData, getNormalized, roomData, totalAvgPerDay, hasData, initDataHandler};

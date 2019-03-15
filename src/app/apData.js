@@ -50,8 +50,16 @@ var apRooms = {
     'apa03-4bb': ['Room4145-4151', 'Room4168', 'Room4170A', 'Room4170B']
 };
 
-var roomMax = {
-    'Room3170A': 12
+function getRoomCapacity(room) {
+    return roomCap[room];
 }
 
-export {roomSize, roomMax, roomAp, apRooms, roomCap}
+function getRoomAp(room) {
+    return roomAp[room];
+}
+
+function getApRooms(ap) {
+    return apRooms[ap];
+}
+
+export {getRoomCapacity, getRoomAp, getApRooms}

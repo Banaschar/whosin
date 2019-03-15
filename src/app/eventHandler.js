@@ -1,10 +1,51 @@
-import {Vector3, Color} from "three";
+import {Vector3, Color, LoadingManager} from "three";
 import {cameraPers, cameraOrtho, renderer, scenePers} from "./sceneHandler";
 import {rooms} from "./geometry";
 import {Interaction} from 'three.interaction';
 import {updateTooltip, updateAnnotation} from "./spriteHandler";
 
 var _domEvents
+
+function initLoadingManager() {
+    var manager = new LoadingManager();
+    var bar = document.createElement("div");
+    bar.setAttribute("id", "loadingBar");
+    var overlay = document.createElement("div");
+    overlay.setAttribute("id", "loadingScreen");
+    var progress = document.createElement("span");
+    progress.setAttribute("id", "progress");
+    var textField = document.createElement("div");
+    textField.setAttribute("id", "loadingText");
+    bar.appendChild(progress);
+    overlay.appendChild(textField);
+    overlay.appendChild(bar);
+    document.body.appendChild(overlay);
+
+    LoadingManager.prototype.setup = function(name) {
+        if (overlay.classList.contains('loadingScreenHidden')) {
+            overlay.classList.remove('loadingScreenHidden');
+        }
+        progress.style.backgroundColor = 'green';
+        textField.textContent = name;
+    }
+
+    manager.onLoad = function() {
+        overlay.classList.add('loadingScreenHidden');
+        progress.style.width = 0;
+    };
+
+    manager.onProgress = function(xhr) {
+        console.log(xhr.loaded);
+        progress.style.width = xhr.loaded / xhr.total * 100 + '%';
+    };
+
+    manager.onError = function(e) {
+        console.error(e);
+        progress.style.backgroundColor = 'red';
+    };
+
+    return manager;
+}
 
 function onDocumentMouseMove(event) {
     // update Tooltip position
@@ -85,4 +126,4 @@ var createEventHandlers = function() {
 };
 */
 
-export {initEventHandler, createTooltipEvents};
+export {initEventHandler, createTooltipEvents, initLoadingManager};

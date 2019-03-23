@@ -97,7 +97,7 @@ function _doRequest(url, ap, timeframe) {
     req.send(null);
 }
 
-function _buildRequest(ap, timeframe) {
+function _buildURL(ap, timeframe) {
 
     return `http://graphite-kom.srv.lrz.de/render/?target=alias(sumSeries(
                     ap.${ap}.ssid.eduroam, 
@@ -108,10 +108,15 @@ function _buildRequest(ap, timeframe) {
 
 }
 
+/*
+ *  Get data from access points
+ *  aps: [String] - Access Point names, see lrz apstat
+ *  timeframe: String
+ */
 function getData(aps, timeframe) {
+    _loadingManager.setup('Loading ' + ap + ' data...');
     for (var ap in aps) {
-        _loadingManager.setup('Loading ' + ap + ' data...')
-        var url = _buildRequest(ap, timeframe);
+        var url = _buildURL(ap, timeframe);
         _doRequest(url, ap, timeframe);
     }
     //_loadingManager.onLoad();

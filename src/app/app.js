@@ -1,36 +1,42 @@
 import {initScene, controls, renderer, 
         scenePers, sceneOrtho, cameraOrtho, cameraPers} from './sceneHandler';
-import {loadModel} from './geometry';
+import {loadModel, loadZip} from './geometry';
 import {initSpriteHandler, initAnnotation} from './spriteHandler';
 import {initEventHandler, initLoadingManager} from './eventHandler';
-import {initGui} from './guiHandler';
+import {initGui, initSideBar} from './guiHandler';
 import {visualUpdate, initColorMap, updateLegend} from './visualization';
 import Stats from '../lib/stats.min';
 import {initDataHandler} from './dataHandler';
 
-// TODO: Switch to precompressed model
-import MODEL from '../assets/Building1_ap_rooms_v3.dae';
+// TODO: Import all files in the assets directory and load by file name (building name)
+import ASSETS from '../assets/assets.zip';
 
 var stats;
 
 function init() {
     var container = document.createElement('div');
+    container.setAttribute('class', 'container');
     document.body.appendChild(container);
+
+    initSideBar(container);
     var manager = initLoadingManager();
-    initScene();
-    loadModel(MODEL, manager);
+    initScene(container);
+    loadZip(ASSETS, manager);
     // TODO: Combine sprite and annotation init methods
     initSpriteHandler();
     initAnnotation();
-    initEventHandler();
+    
     initDataHandler(manager);
     initGui();
-    initColorMap();
+    initColorMap(container);
 
     stats = new Stats();
 
     container.appendChild(renderer.domElement);
     container.appendChild(stats.dom);
+
+    initEventHandler();
+    
 }
 
 /*

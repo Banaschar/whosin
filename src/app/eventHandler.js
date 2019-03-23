@@ -21,6 +21,8 @@ function initLoadingManager() {
     overlay.appendChild(bar);
     document.body.appendChild(overlay);
 
+    LoadingManager.prototype.loadType = null;
+
     LoadingManager.prototype.setup = function(name) {
         if (overlay.classList.contains('loadingScreenHidden')) {
             overlay.classList.remove('loadingScreenHidden');
@@ -41,6 +43,8 @@ function initLoadingManager() {
 
     manager.onError = function(e) {
         console.error(e);
+        // For zip loader error: create cases:
+        //console.log('error', event.error);
         progress.style.backgroundColor = 'red';
     };
 
@@ -55,10 +59,13 @@ function onDocumentMouseMove(event) {
     toolTipSprite.position.set(pos.x, pos.y - 20, 1);
 }
 
-function onWindowResize() {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-
+function onWindowResize(container) {
+    //var width = window.innerWidth;
+    //var height = window.innerHeight;
+    var style = window.getComputedStyle(container);
+    //var width = container.clientWidth - parseInt(style.marginLeft);
+    var width = container.clientWidth - parseInt(container.style.marginLeft, 10);
+    var height = container.clientHeight;
     cameraPers.aspect = width / height;
     cameraPers.updateProjectionMatrix();
 
@@ -71,13 +78,17 @@ function onWindowResize() {
     renderer.setSize(width, height);
 }
 
-function initEventHandler() {
+function initEventHandler(container) {
     //_domEvents = new THREEx.DomEvents(cameraPers, renderer.domElement);
     //window.addEventListener('mousemove', onDocumentMouseMove, false);
-    window.addEventListener('resize', onWindowResize, false);
+    window.addEventListener('resize', function() {
+        onWindowResize(container);
+    }, false);
 }
 
-
+/*
+ * Called from Geometry.loadGeo
+ */
 function createTooltipEvents(geo) {
     var interaction = new Interaction(renderer, scenePers, cameraPers);
     for (var floor in geo) {
@@ -126,4 +137,4 @@ var createEventHandlers = function() {
 };
 */
 
-export {initEventHandler, createTooltipEvents, initLoadingManager};
+export {initEventHandler, createTooltipEvents, initLoadingManager, onWindowResize};

@@ -11,11 +11,11 @@ var _switchBackground = false;
 var cameraPers, cameraOrtho;
 var controls;
 
-function initScene() {
+function initScene(container) {
     scenePers = new Scene();
     sceneOrtho = new Scene();
     _initLight();
-    _initRenderer();
+    _initRenderer(container);
     _initCamera();
     _initControls();
     scenePers.add(_ambientLight);
@@ -37,11 +37,14 @@ function _initLight() {
     _backLight.position.set(100, 0, -100).normalize();
 }
 
-function _initRenderer() {
+function _initRenderer(container) {
     var _switchBackground = false;
-    renderer = new WebGLRenderer({alpha: true});
+    var webglCanvas = document.createElement('canvas');
+    webglCanvas.setAttribute('class', 'webglCanvas');
+    renderer = new WebGLRenderer({alpha: true, canvas: webglCanvas});
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    //renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(container.clientWidth, container.clientHeight);
     renderer.setClearColor(0xffffff, 0);
     renderer.autoClear = false; // For overlay renderer
 

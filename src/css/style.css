@@ -4,6 +4,164 @@ body {
     overflow: hidden;
 }
 
+.container {
+    position: fixed;
+    top: 30px;
+    width: 100%;
+    height: 100%;
+    transition: margin-left .5s;
+}
+
+.webglCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    transition: .5s;
+}
+
+/* reset our lists to remove bullet points and padding */
+.mainmenu, .submenu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.mainmenu a {
+  display: block;
+  font-size: 25px;
+  background-color: #CCC;
+  text-decoration: none;
+  padding: 10px;
+  color: #000;
+}
+
+.mainmenu a:hover {
+    background-color: #C5C5C5;
+}
+
+.submenu a {
+    background-color: #999;
+}
+
+.submenu a:hover {
+  background-color: #666;
+}
+
+.submenu {
+  overflow: hidden;
+  max-height: 0;
+  -webkit-transition: all 0.5s ease-out;
+}
+
+.submenu button {
+    text-decoration: none;
+    transition: 0.3s;
+    background-color: #4CAF50;
+    border: 1px solid green;
+    color: white;
+    padding: 10px 2px 8px;
+    cursor: pointer;
+    width: 100%;
+    display: block;
+}
+
+.submenu button:hover {
+    background-color: #3e8e41;
+}
+
+.submenu select {
+    text-decoration: none;
+    transition: 0.3s;
+    background-color: #4CAF50;
+    border: 1px solid green;
+    color: white;
+    padding: 10px 2px 8px;
+    cursor: pointer;
+    width: 100%;
+    display: block;
+}
+
+
+/* Sidebar */
+.sidebar {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 30px;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 10px;
+}
+
+.sidebar .closebtn {
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+    border: none;
+    background-color: #111;
+    color: white;
+    cursor: pointer;
+}
+
+.sidebar .mainmenu {
+    transition: 0.3s;
+}
+
+.menuBtn {
+    position: fixed;
+    top: 0;
+    left: 0;
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #111;
+    color: white;
+    /*padding: 10px 15px;*/
+    height: 30px;
+    width: 250px;
+    border: none;
+    outline: none;
+}
+
+.menuBtn:hover {
+    background-color: #3e8e41;
+}
+
+.topBorder {
+    position: fixed;
+    background-color: #111;
+    height: 30px;
+    left: 250px;
+    top: 0;
+    width: 100%;
+    border: none;
+}
+
+/* Button Group */
+.btn-group button {
+    background-color: #4CAF50;
+    border: 1px solid green;
+    color: white;
+    padding: 10px, 2px;
+    cursor: pointer;
+    width: 100%;
+    display: block;
+}
+
+.btn-group button:not(:last-child) {
+    border-bottom: none;
+}
+
+.btn-group button:hover {
+    backgroun-color: #3e8e41;
+}
+
+/* Floating room annotation */
 .annotation {
     position: absolute;
     top: 0;
@@ -91,23 +249,24 @@ body {
 }
 
 #legend {
-    position: absolute;
+    position: relative;
     top: 100px;
     left: 10px;
 }
 
 #legendText {
-    position: absolute;
+    position: relative;
     top: 70px;
     left: 20px;
 }
 
+/* Loading Bar */
 #loadingScreen {
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    width: 100%;
-    height: 100%;
+    position: fixed;
+    top: 10%;
+    left: 15%;
+    width: 50em;
+    height: 4em;
     display: flex;
     justify-content: center;
     /*align-items: center;*/
@@ -134,6 +293,36 @@ body {
   background-color: #75b800;
   height: inherit;
   border-radius: inherit;
-
   width: 5%;
+}
+
+.slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 20px;
+    background: #d3d3d3;
+    outline: none;
+    opacity: 0.7;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+}
+
+.slider:hover {
+    opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: #4CAF50;
+    cursor: pointer;
 }

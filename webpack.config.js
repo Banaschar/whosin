@@ -25,7 +25,7 @@ module.exports = {
     module: {
         rules: [
                 {
-                    test: /\.(dae|png|jpg)$/,
+                    test: /\.(dae|zip|png|jpg)$/,
                     use: [
                         {
                             loader: 'file-loader',

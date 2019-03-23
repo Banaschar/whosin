@@ -2,6 +2,7 @@ import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
 import {Mesh, MeshBasicMaterial, LoadingManager, MeshLambertMaterial} from 'three';
 import {scenePers} from './sceneHandler';
 import {createTooltipEvents} from './eventHandler';
+import ZipLoader from 'zip-loader';
 
 var models = [];
 var roomList = {};
@@ -25,42 +26,57 @@ function _modifyTextures() {
 */
 
 /*
-function _initLoadingManager() {
-    var manager = new LoadingManager();
-    var bar = document.createElement("div");
-    bar.setAttribute("id", "loadingBar");
-    var overlay = document.createElement("div");
-    overlay.setAttribute("id", "loadingScreen");
-    var progress = document.createElement("span");
-    progress.setAttribute("id", "progress");
-    bar.appendChild(progress);
-    overlay.appendChild(bar);
-    document.body.appendChild(overlay);
-
-    manager.onLoad = function() {
-        overlay.classList.add('loadingScreenHidden');
-        progress.style.width = 0;
-    };
-
-    manager.onProgress = function(xhr) {
-        progress.style.width = xhr.loaded / xhr.total * 100 + '%';
-    };
-
-    manager.onError = function(e) {
-        console.error(e);
-        progress.style.backgroundColor = 'red';
-    };
-
-    return manager;
-}
+    Load the zipped assets
 */
+function loadZip(path, manager) {
+    manager.setup('Loading packed assets...');
+    manager.loadType = 'zip';
+    var loader = new ZipLoader(path);
+    loader.on('progress', manager.onProgress);
 
+    loader.on('error', manager.onError);
 
-function loadModel(modelName, manager) {
-    //var manager = _initLoadingManager();
+    loader.on('load', function(event) {
+        var key = Object.keys(loader.files).find(function(ele) {
+            var reg = /\.dae$/;
+            return reg.test(ele);
+        });
+        
+        loadModel(loader, manager);
+
+        manager.onLoad();
+    });
+
+    loader.load();
+}
+
+/*
+ * Parse the model from the extracted blobs
+ */
+function loadModel(zipLoader, manager) {
     manager.setup('Loading Building...');
-    var caloader = new ColladaLoader(manager);
-    caloader.load(modelName, function (collada) {
+    manager.loadType = 'model';
+    manager.setURLModifier(function(url) {
+        var reg = /\.dae$/;
+
+        /*
+            The ColladaLoader tries to load the material files from the
+            same directory, e.g. prepends './' to the path. We have to remove that,
+            as we're loading them from blob.
+        */
+        if (!reg.test(url)) {
+            url = url.substring(2, );
+        }
+        return zipLoader.extractAsBlobUrl(url, 'blob');
+    });
+
+    var caLoader = new ColladaLoader(manager);
+    var daeURL = Object.keys(zipLoader.files).find(function(ele) {
+            var reg = /\.dae$/;
+            return reg.test(ele);
+    });
+
+    caLoader.load(daeURL, function (collada) {
         models.push(collada.scene);
         scenePers.add(collada.scene);
         _loadNodes();
@@ -71,11 +87,7 @@ function loadModel(modelName, manager) {
     }, manager.onProgress, manager.onError);
 
 }
-/*
-function (xhr) {
-        console.log( (xhr.loaded / xhr.total * 100) + '% loaded');
-    }
-*/
+
 /* 
     loads the room nodes (and some specific walls, remove after testing)
     Refactor after initial tests, to provide list of stuff to seatch for
@@ -198,4 +210,4 @@ function moveGeometry() {
 }
 
 export {loadModel, hideGeometry, setTransparency, makeTransparent, 
-        roomList, roomListString, apList, moveGeometry};
+        roomList, roomListString, apList, moveGeometry, loadZip};

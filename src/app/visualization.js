@@ -27,7 +27,7 @@ var _updateQueue = [];
 var _tmpPillarGeometry = [];
 var _graphDiv;
 
-function createLegend() {
+function createLegend(container) {
     var numColors = 256;
     var ticks = 5;
     var maxEle = 100;
@@ -134,7 +134,8 @@ function createLegend() {
         }
     }
     
-    document.body.appendChild(legendText);
+    //document.body.appendChild(legendText);
+    container.appendChild(legendText);
 }
 
 /*
@@ -155,12 +156,12 @@ function updateLegend() {
 
 }
 
-function initColorMap() {
+function initColorMap(container) {
     _lut = new Lut('rainbow', 256);
     _lut.setMax(100);
     _lut.setMin(0);
 
-    createLegend();
+    createLegend(container);
 }
 
 function apSphere() {

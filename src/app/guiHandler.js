@@ -30,52 +30,77 @@ function createListEle(ele) {
     return li;
 }
 
-function createDropDown(options) {
+function createDropDown(optionsText, optionsValues, id, changeFunction) {
     var select = document.createElement('select');
+    select.setAttribute('id', id);
     var tmp;
-    for (var ele of options) {
-        tmp = document.createElement('option');
-        tmp.setAttribute('value', ele);
-        tmp.innerHTML = ele;
-        select.appendChild(tmp);
+    for (var i = 0; i < optionsText.length; i++) {
+        select.options.add(new Option(optionsText[i], optionsValues[i]));
     }
     select.addEventListener('click', function(event) {
+        if (!event) {
+            event = window.event;
+        }
         event.stopPropagation();
-    })
+    });
+    select.addEventListener('change', changeFunction);
     return select;
 }
 
+/* 
+ * Create Menu
+ * TODO: Make sure all elements are li items
+ */
 function createMenu(sidebar) {
     var menu = document.createElement('ul');
     menu.setAttribute('class', 'mainmenu');
     
-    menu.appendChild(createListEle(createA('#', 'Visual')));
+    //menu.appendChild(createListEle(createA('#', 'Visual')));
 
+    /* Time Select Elements */
+    var b = document.createElement('b');
+    b.innerHTML = 'Zeitraum';
+    menu.appendChild(b);
+    menu.appendChild(createDropDown(['None', '24h', 'Month', '6 Months', '12 Months'], 
+        ['None', '-24h', '-1month', '-6months', '-12months'], 'timeSelect', getData));
+
+    /* Menu items */
     var item2 = createListEle(createA('#', 'Data'));
     var sub1 = document.createElement('ul');
     sub1.setAttribute('class', 'submenu');
-    sub1.appendChild(createListEle(createButton('substuff1', false, function(event){
+    sub1.appendChild(createListEle(createButton('Concept 1', false, viewConcept1)));
+    sub1.appendChild(createListEle(createButton('Graph2', false, function(){
+        if (!event) {
+            event = window.event;
+        }
         event.stopPropagation();
     })));
-    sub1.appendChild(createListEle(createButton('substuff2', false, function(){
+    sub1.appendChild(createListEle(createButton('Graph3', false, function(){
+        if (!event) {
+            event = window.event;
+        }
         event.stopPropagation();
     })));
-    sub1.appendChild(createListEle(createButton('substuff3', false, function(){
-        event.stopPropagation();
-    })));
-    sub1.appendChild(createDropDown(['None', '24h', 'Month', '6 Months', '12 Months']));
+    sub1.appendChild(createDropDown(['None'], ['None'], 'floorDropdown', floorView));
+    
     var slider = document.createElement('input');
     slider.setAttribute('type', 'range');
     slider.setAttribute('class', 'slider');
-    slider.setAttribute('min', '1');
-    slider.setAttribute('max', '100');
-    slider.setAttribute('value', '50');
+    slider.setAttribute('min', '0.1');
+    slider.setAttribute('max', '1.0');
+    slider.setAttribute('step', '0.1')
+    slider.setAttribute('value', '1.0');
+    slider.setAttribute('id', 'transparencySlider');
     slider.addEventListener('click', function(event) {
+        if (!event) {
+            event = window.event;
+        }
         event.stopPropagation();
     });
+    slider.addEventListener('change', changeTransparency);
     sub1.appendChild(slider);
 
-    item2.addEventListener('click', function(event) {
+    item2.addEventListener('click', function() {
         if (sub1.classList.contains('active')) {
             sub1.classList.remove('active');
             sub1.style.maxHeight = '0';
@@ -102,14 +127,16 @@ function initSideBar(container) {
     sidebar.setAttribute('id', 'sidebarMenu');
     sidebar.setAttribute('class', 'sidebar');
     document.body.appendChild(createButton('☰ Menu', 'menuBtn', function() {
-        if (sidebar.style.width == '250px') {
+        if (sidebar.style.width === '250px') {
             sidebar.style.width = '0px';
-            container.style.marginLeft = '0';
-            //container.style.left = '0px';
+            //container.style.marignLeft = '0px';
+            container.style.left = '0px';
+            container.style.width = window.innerWidth + 'px';
         } else {
             sidebar.style.width = '250px';
-            container.style.marginLeft = '250px';
-            //container.style.left = '250px';
+            //container.style.marginLeft = '250px';
+            container.style.left = '250px';
+            container.style.width = (window.innerWidth - 250) + 'px'; 
         }
 
         // get container for everything else
@@ -123,6 +150,45 @@ function initSideBar(container) {
     document.body.appendChild(border);
     document.body.appendChild(sidebar);
 }
+
+
+/* Visualization Concepts
+ * Map to menu buttons
+ */
+function viewConcept1() {
+    if (!event) {
+        event = window.event;
+    }
+    event.stopPropagation();
+    Visualization.makeTransparent('all', 0.3);
+    Visualization.colorMap('None');
+    Visualization.displayGraph();
+    // TODO: Camera angle
+    // TODO: 2D view
+}
+
+function floorView() {
+    var drop = document.getElementById('floorDropdown');
+    var floor = drop.options[drop.selectedIndex].value;
+    Visualization.hideFloors(floor);
+    Visualization.pillarMap(floor);
+    // TODO: camera angle
+}
+
+function changeTransparency() {
+    var value = document.getElementById('transparencySlider').value;
+    Visualization.makeTransparent('all', value);
+}
+
+function getData() {
+    var time = timeSelect.options[timeSelect.selectedIndex].value;
+    Visualization.setCurrentTime(time);
+    if (time !== 'None') {
+        DataHandler.getData(Geometry.apList, time);
+    }
+}
+
+/* ----------- Test Menu ---------------- */
 
 var _guiAttributes = {
     _transparent: 'wall',

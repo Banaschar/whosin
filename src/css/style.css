@@ -9,7 +9,8 @@ body {
     top: 30px;
     width: 100%;
     height: 100%;
-    transition: margin-left .5s;
+    left: 0px;
+    transition: left .5s;
 }
 
 .webglCanvas {
@@ -18,6 +19,9 @@ body {
     left: 0;
     z-index: -1;
     transition: .5s;
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 /* reset our lists to remove bullet points and padding */
@@ -38,6 +42,24 @@ body {
 
 .mainmenu a:hover {
     background-color: #C5C5C5;
+}
+
+.mainmenu b {
+    display: inline-block;
+    text-decoration: none;
+    background-color: #CCC;
+    color: #000;
+    padding: 10px;
+}
+
+.mainmenu select {
+    display: inline-block;
+    text-decoration: none;
+    transition: 0.3s;
+    background-color: #CCC;
+    color: #000;
+    padding: 10px;
+    cursor: pointer;
 }
 
 .submenu a {
@@ -69,6 +91,7 @@ body {
 .submenu button:hover {
     background-color: #3e8e41;
 }
+
 
 .submenu select {
     text-decoration: none;

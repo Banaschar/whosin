@@ -1,10 +1,14 @@
-import {Vector3, Color, LoadingManager} from "three";
+import {Vector2, Vector3, Color, LoadingManager, Raycaster} from "three";
 import {cameraPers, cameraOrtho, renderer, scenePers} from "./sceneHandler";
 import {rooms} from "./geometry";
 import {Interaction} from 'three.interaction';
 import {updateTooltip, updateAnnotation} from "./spriteHandler";
 
-var _domEvents
+var _domEvents;
+var _mouse;
+var _raycaster;
+var _rooms = [];
+var _currHoverObject = null;
 
 function initLoadingManager() {
     var manager = new LoadingManager();
@@ -64,8 +68,18 @@ function onWindowResize(container) {
     //var height = window.innerHeight;
     var style = window.getComputedStyle(container);
     //var width = container.clientWidth - parseInt(style.marginLeft);
-    var width = container.clientWidth - parseInt(container.style.marginLeft, 10);
+    
+    //var width = container.clientWidth - parseInt(container.style.marginLeft, 10);
+    //var width = container.clientWidth;
+    //var height = container.clientHeight;
+    var width = parseInt(style.width, 10);
     var height = container.clientHeight;
+
+    //var canvas = renderer.domElement;
+    //var width = canvas.clientWidth;
+    //var height = canvas.clientHeight;
+    console.log('Canvas width: ' + container.offsetLeft);
+
     cameraPers.aspect = width / height;
     cameraPers.updateProjectionMatrix();
 
@@ -80,7 +94,11 @@ function onWindowResize(container) {
 
 function initEventHandler(container) {
     //_domEvents = new THREEx.DomEvents(cameraPers, renderer.domElement);
-    //window.addEventListener('mousemove', onDocumentMouseMove, false);
+    _mouse = new Vector2();
+    _raycaster = new Raycaster();
+    window.addEventListener('mousemove', function(event) {
+        _onMouseMove(event, container);
+    }, false);
     window.addEventListener('resize', function() {
         onWindowResize(container);
     }, false);
@@ -111,6 +129,39 @@ function createTooltipEvents(geo) {
     }
 }
 
+function setEventObjects(rooms) {
+    for (var floor of Object.keys(rooms)) {
+        for (var room of Object.keys(rooms[floor])) {
+            _rooms.push(rooms[floor][room]);
+        }
+    }
+}
+
+function _updateMouse(event, container) {
+    _mouse.x = ((event.clientX - container.offsetLeft / 2 + 0.5) / window.innerWidth) * 2 - 1;
+    _mouse.y = -((event.clientY - renderer.domElement.offsetTop + 0.5) / window.innerHeight) * 2 + 1;
+}
+
+function _checkIntersections() {
+    _raycaster.setFromCamera(_mouse, cameraPers);
+    var intersections = _raycaster.intersectObjects(_rooms);
+
+    if (intersections.length === 0 && _currHoverObject !== null) {
+        updateTooltip(null, false);
+        updateAnnotation(null, false);
+        _currHoverObject = null;
+    } else if (intersections.length > 0 && intersections[0].object.name !== _currHoverObject) {
+        updateTooltip(intersections[0].object, true);
+        updateAnnotation(intersections[0].object, true);
+        _currHoverObject = intersections[0].object.name;
+    } 
+}
+
+function _onMouseMove(event, container) {
+    _updateMouse(event, container);
+    _checkIntersections();
+}
+
 
 /*
 var createEventHandlers = function() {
@@ -137,4 +188,5 @@ var createEventHandlers = function() {
 };
 */
 
-export {initEventHandler, createTooltipEvents, initLoadingManager, onWindowResize};
+export {initEventHandler, createTooltipEvents, initLoadingManager,
+        setEventObjects, onWindowResize};

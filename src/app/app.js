@@ -27,15 +27,15 @@ function init() {
     initAnnotation();
     
     initDataHandler(manager);
-    initGui();
+    //initGui();
     initColorMap(container);
 
     stats = new Stats();
 
     container.appendChild(renderer.domElement);
-    container.appendChild(stats.dom);
+    document.body.appendChild(stats.dom);
 
-    initEventHandler();
+    initEventHandler(container);
     
 }
 

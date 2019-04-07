@@ -25,15 +25,18 @@ function initScene(container) {
 }
 
 function _initLight() {
-    //_ambientLight = new AmbientLight(0xffffff, 0.9);
+    _ambientLight = new AmbientLight(0xffffff, 1.0);
     //_ambientLight = new AmbientLight(0x666666, 0.85);
-    _ambientLight = new AmbientLight(0x404040, 1.0);
-    _keyLight = new DirectionalLight(new Color('hsl(30, 100%, 75%)'), 1.0);
+    //_ambientLight = new AmbientLight(0x404040, 1.0);
+    //_keyLight = new DirectionalLight(new Color('hsl(30, 100%, 75%)'), 1.0);
+    _keyLight = new DirectionalLight(new Color('hsl(30, 100%, 75%)'), 0.75);
     _keyLight.position.set(-100, 0, 100);
 
-    _fillLight = new DirectionalLight(new Color('hsl(240, 100%, 75%)'), 0.75);
+    //_fillLight = new DirectionalLight(new Color('hsl(240, 100%, 75%)'), 0.75);
+    _fillLight = new DirectionalLight(new Color('hsl(30, 100%, 75%)'), 0.75);
     _fillLight.position.set(100, 0, 100);
-    _backLight = new DirectionalLight(0xffffff, 1.0);
+    //_backLight = new DirectionalLight(0xffffff, 1.0);
+    _backLight = new DirectionalLight(new Color('hsl(30, 100%, 75%)'), 0.75);
     _backLight.position.set(100, 0, -100).normalize();
 }
 

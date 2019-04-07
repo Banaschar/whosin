@@ -1,7 +1,7 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
 import {Mesh, MeshBasicMaterial, LoadingManager, MeshLambertMaterial} from 'three';
 import {scenePers} from './sceneHandler';
-import {createTooltipEvents} from './eventHandler';
+import {createTooltipEvents, setEventObjects} from './eventHandler';
 import ZipLoader from 'zip-loader';
 
 var models = [];
@@ -79,8 +79,10 @@ function loadModel(zipLoader, manager) {
     caLoader.load(daeURL, function (collada) {
         models.push(collada.scene);
         scenePers.add(collada.scene);
+        //console.log(collada.scene);
         _loadNodes();
-        createTooltipEvents(roomList);
+        //createTooltipEvents(roomList);
+        setEventObjects(roomList);
         // TODO: Refactor.
         //_modifyTextures();
 
@@ -134,6 +136,17 @@ function _loadNodes() {
             //console.log(roomList[floor][key].material);
         }
     }
+
+    // Update menu floor dropdown
+    var drop = document.getElementById('floorDropdown');
+    while (drop.options.length) {
+        drop.remove(0);
+    }
+    drop.options.add(new Option('None', 'None'));
+    for (var opt of Object.keys(roomList)) {
+        drop.options.add(new Option('Etage' + opt, opt));
+    }
+
 }
 
 /*

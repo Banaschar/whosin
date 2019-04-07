@@ -269,7 +269,7 @@ function _getColor(room) {
     objects in a row and one redered first.
     material.alphaTest has to be larger/smaller than opacity
 */
-function colorMap() {
+function colorMap(floor) {
     _colorMap = !_colorMap;
 
     function __applyColor(floor, room) {
@@ -281,9 +281,7 @@ function colorMap() {
     }
 
     if (_colorMap) {
-        
-        var _floor = _currentFloor;
-        if (_floor === 'None') {
+        if (floor === 'None') {
             for (var floorKey in roomList) {
                 for (var roomKey in roomList[floorKey]) {
                     __applyColor(floorKey, roomKey);
@@ -291,8 +289,8 @@ function colorMap() {
             }
 
         } else {
-            for (var roomKey in roomList[_floor]) {
-                __applyColor(_floor, roomKey);
+            for (var roomKey in roomList[floor]) {
+                __applyColor(floor, roomKey);
             }
         }
 
@@ -313,10 +311,11 @@ function colorMap() {
     THE Z coordinate for all rooms of a floor is the same!!!!
     So I need to compute it only once, for gods sake!!!
 */
-function pillarMap() {
+function pillarMap(floor) {
 
     _pillarMap = !_pillarMap;
 
+    /*
     var can = document.createElement('canvas');
     can.width = 100;
     can.height = 20;
@@ -325,6 +324,7 @@ function pillarMap() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = 'bold 150px';
+    */
 
     function __removeLines() {
         for (var ele of _tmpPillarGeometry) {
@@ -378,25 +378,7 @@ function pillarMap() {
         roomList[floor][room].position.z += (((height * scale) - height) / 2 - (middle * scale - middle));
     }
 
-    if (_pillarMap) {
-        _lastPillar = {};
-        _tmpPillarGeometry = [];
-        var _floor = _currentFloor;
-        _lastFloor = _floor;
-        if (_floor === 'None') {
-            console.log("Can't print PillarMap without floor selected")
-
-        } else {
-            for (var roomKey in roomList[_floor]) {
-                var scale = 1 + DataHandler.getNormalized(roomKey) * 4;
-                // Necessary to reverse scaling
-                _lastPillar[roomKey] = scale;
-
-                __createPillar(_floor, roomKey, scale);
-                //__createLine(_floor, roomKey);
-            }
-        }
-    } else {
+    function __removePillar() {
         for (var roomKey in _lastPillar) {
             var scale = _lastPillar[roomKey];
             roomList[_lastFloor][roomKey].scale.set(1, 1, 1);
@@ -409,7 +391,32 @@ function pillarMap() {
             roomList[_lastFloor][roomKey].position.z -= (((height * scale) - height) / 2 - (middle * scale - middle));
         }
         //__removeLines();
-        
+    }
+
+    if (!_pillarMap && (floor === 'None')) {
+        __removePillar();
+    } else {
+
+        if (!_pillarMap) {
+            __removePillar();
+            _pillarMap = !_pillarMap;
+        }
+        _lastPillar = {};
+        _tmpPillarGeometry = [];
+        _lastFloor = floor;
+        if (floor === 'None') {
+            console.log("Can't print PillarMap without floor selected")
+
+        } else {
+            for (var roomKey in roomList[floor]) {
+                var scale = 1 + DataHandler.getNormalized(roomKey) * 4;
+                // Necessary to reverse scaling
+                _lastPillar[roomKey] = scale;
+
+                __createPillar(floor, roomKey, scale);
+                //__createLine(floor, roomKey);
+            }
+        }
     }   
 
 }
@@ -507,9 +514,9 @@ function makeTransparent(arg, opac) {
     }
 }
 
-function hideFloors() {
-    if (_currentFloor in roomList) {
-        hideGeometry(roomList[_currentFloor][Object.keys(roomList[_currentFloor])[0]].geometry.boundingBox.max.z);
+function hideFloors(floor) {
+    if (floor in roomList) {
+        hideGeometry(roomList[floor][Object.keys(roomList[floor])[0]].geometry.boundingBox.max.z);
     } else {
         hideGeometry(0);
     }

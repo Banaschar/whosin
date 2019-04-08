@@ -7,7 +7,8 @@ body {
 .container {
     position: fixed;
     top: 30px;
-    width: 100%;
+    /*width: 100%;*/
+    right: 0;
     height: 100%;
     left: 0px;
     transition: left .5s;
@@ -20,8 +21,32 @@ body {
     z-index: -1;
     transition: .5s;
     width: 100%;
+    /*right: 0;*/
     height: 100%;
     display: block;
+}
+
+.webglCanvas1 {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: -1;
+    transition: .5s;
+    width: 75%;
+    /*right: 0;*/
+    height: 50%;
+    display: inline-block;
+}
+
+.webglCanvas2 {
+    position: absolute;
+    top: 0;
+    left: 75%;
+    z-index: -1;
+    transition: .5s;
+    right: 0;
+    height: 100%;
+    display: inline-block;
 }
 
 /* reset our lists to remove bullet points and padding */
@@ -161,8 +186,12 @@ body {
     height: 30px;
     left: 250px;
     top: 0;
-    width: 100%;
+    right: 0;
     border: none;
+    line-height: 30px;
+    padding-right: 50px;
+    text-align: right;
+    color: red;
 }
 
 /* Button Group */
@@ -182,6 +211,30 @@ body {
 
 .btn-group button:hover {
     backgroun-color: #3e8e41;
+}
+
+.camera3d {
+
+}
+
+.camera2d {
+
+}
+
+/* Graph div */
+#barGraph {
+    stroke-width: 60px;
+}
+
+.graph {
+    position:fixed;
+    bottom:0;
+    left:0;
+    /*right:0;*/
+    /*width:800px;*/
+    text-align: center;
+    width: 50%;
+    height:400px;
 }
 
 /* Floating room annotation */
@@ -254,18 +307,7 @@ body {
     background: rgba(0, 0, 0, 0.8);
 }
 
-#barGraph {
-    stroke-width: 60px;
-}
 
-.graph {
-    position:fixed;
-    bottom:0;
-    left:0;
-    right:0;
-    width:800px;
-    height:400px;
-}
 
 .roomGraph {
     position:absolut;
@@ -348,4 +390,46 @@ body {
     height: 20px;
     background: #4CAF50;
     cursor: pointer;
+}
+
+.my-legend {
+    position: relative;
+    top: 70px;
+    left: 20px;
+}
+
+.my-legend .legend-title {
+    text-align: left;
+    margin-bottom: 8px;
+    font-weight: bold;
+    font-size: 90%;
+}
+.my-legend .legend-scale ul {
+    margin: 0;
+    padding: 0;
+    float: left;
+    list-style: none;
+}
+.my-legend .legend-scale ul li {
+    display: block;
+    float: left;
+    width: 50px;
+    margin-bottom: 6px;
+    text-align: center;
+    font-size: 80%;
+    list-style: none;
+}
+.my-legend ul.legend-labels li span {
+    display: block;
+    float: left;
+    height: 15px;
+    width: 50px;
+}
+.my-legend .legend-source {
+    font-size: 70%;
+    color: #999;
+    clear: both;
+}
+.my-legend a {
+    color: #777;
 }

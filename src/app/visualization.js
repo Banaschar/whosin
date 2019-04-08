@@ -5,6 +5,7 @@ import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color,
         SpriteMaterial, Sprite, Geometry, Line, LineBasicMaterial,
         Texture, DoubleSide, PlaneGeometry} from "three";
 import {scenePers, cameraPers, renderer, sceneOrtho} from "./sceneHandler";
+import * as ApData from './apData';
 
 import * as DataHandler from './dataHandler';
 import * as Chartist from "chartist";
@@ -26,7 +27,10 @@ var _legendSprite;
 var _updateQueue = [];
 var _tmpPillarGeometry = [];
 var _graphDiv;
+//var _colorList = [0xF1EEF6, 0xBDC9E1, 0x74A9CF, 0x2B8CBE, 0x045A8D];
+var _colorList = [0xffffe0, 0xffbd84, 0xf47461, 0xcb2f44, 0x8b0000];
 
+/*
 function createLegend(container) {
     var numColors = 256;
     var ticks = 5;
@@ -39,14 +43,6 @@ function createLegend(container) {
     legend.setAttribute('width', 1);
     legend.setAttribute('height', numColors);
 
-    /*
-    // For usage as Bitmap
-    var texture = new CanvasTexture(legend);
-    var material = new SpriteMaterial({
-        map: texture
-    });
-    _legendSprite = new Sprite(material);
-    */
     var imageData = ctx.getImageData(0, 0, 1, numColors);
     var data = imageData.data;
     var k = 0;
@@ -87,25 +83,7 @@ function createLegend(container) {
     var destCtx = destCanvas.getContext('2d');
     destCtx.scale(28, 1);
     destCtx.drawImage(legend, 0, 0);
-    //document.body.appendChild(destCanvas)
-    /*
-    //createImageBitmap not supported in Safari
-    var bit = createImageBitmap(imageData);
-    ctx.drawImage(bit, 28, 1);
-    document.body.appendChild(legend);
-    */
-
-    /*
-    // Usage as sprite. Maybe better performance, but harder to create text legend
-    _legendSprite.position.set(-900, 200, 1);
-    //_legendSprite.scale.set(1, 10, 1);
-    _legendSprite.scale.set(20, 400, 1);
-    sceneOrtho.add(_legendSprite);
-    */
-
-    /*
-        Draw text for Legend on seperate canvas 
-    */
+    
     var offsetX = 28;
     var offsetY = 30;
     var delta = numColors / (ticks - 1);
@@ -137,24 +115,41 @@ function createLegend(container) {
     //document.body.appendChild(legendText);
     container.appendChild(legendText);
 }
-
-/*
-    If Legend is a Sprite, position has to be updated
-    TODO: Remove, not used
 */
-function updateLegend() {
-    var pos = new Vector3((300 / window.innerWidth) + 2 - 1,
-                         (300 / window.innerHeight) * 2 + 1, 1);
-    pos.unproject(cameraPers);
 
-    pos.sub(cameraPers.position).normalize();
-    var distance = -cameraPers.position.z / pos.z;
-    pos.multiplyScalar(distance);
-    pos.add(cameraPers.position);
+function createLegend(container) {
 
-    _legendSprite.position.set(pos.x, pos.y, pos.z);
+    function __createListEle(color, text) {
+        console.log(color);
+        var li = document.createElement('li');
+        var sp = document.createElement('SPAN');
+        sp.style.background = color;
+        li.innerHTML = text;
+        li.appendChild(sp);
+        console.log(sp.style.background);
+        return li;
+    }
 
+    var legend = document.createElement('div');
+    legend.setAttribute('class', 'my-legend');
+    var title = document.createElement('div');
+    title.setAttribute('class', 'legend-title');
+    title.innerHTML = 'Average Room usage in percent of capacity';
+    var scale = document.createElement('div');
+    scale.setAttribute('class', 'legend-scale');
+
+    var list = document.createElement('ul');
+    list.setAttribute('class', 'legend-labels');
+    for (var i = 0; i < 5; i++) {
+        var color = '#' + ('000000'+(_colorList[i]).toString(16)).substr(-6);
+        list.appendChild(__createListEle(color, ''+(i+1)*20+'%'))
+    }
+    scale.appendChild(list);
+    legend.appendChild(title);
+    legend.appendChild(scale);
+    container.appendChild(legend);
 }
+
 
 function initColorMap(container) {
     _lut = new Lut('rainbow', 256);
@@ -166,6 +161,19 @@ function initColorMap(container) {
 
 function apSphere() {
     _apSphere = !_apSphere;
+    var apColorList = {
+        'apa01-3bb': 0xd11141, 
+        'apa02-3bb': 0x00b159,
+        'apa01-4bb': 0x00aedb,
+        'apa03-4bb': 0xf37735
+    };
+    function __appColor(floor, room) {
+        roomList[floor][room].material.transparent = false;
+        roomList[floor][room].material.color = new Color(apColorList[ApData.getRoomAp(room)]);
+        //console.log(roomList[floor][room].material);
+        //roomList[floor][room].material.color.setHex(_getColor(room));
+        roomList[floor][room].material.needsUpdate = true;
+    }
     if (_apSphere) {
 
         // Create spheres if not yet created
@@ -190,6 +198,13 @@ function apSphere() {
             }
 
         }
+
+        for (var floorKey in roomList) {
+                for (var roomKey in roomList[floorKey]) {
+                    __appColor(floorKey, roomKey);
+                }
+            }
+
         /*
         makeTransparent('Material8', 0.6);
         makeTransparent('Material12', 0.6);
@@ -197,7 +212,7 @@ function apSphere() {
         makeTransparent('Material3', 0.4);
         makeTransparent('Material4', 0.4);
         */
-        makeTransparent('all', 0.6);
+        makeTransparent('all', 0.2);
 
         for (var item of _sphereList) {
             scenePers.add(item);
@@ -246,7 +261,7 @@ function _getColor(room) {
 }
 */
 
-
+/*
 function _getColor(room) {
     var perc = 100 - DataHandler.getNormalized(room) * 100;
     var r, g, b = 0;
@@ -261,6 +276,26 @@ function _getColor(room) {
     var h = r * 0x10000 + g * 0x100 + b * 0x1;
     return '#' + ('000000' + h.toString(16)).slice(-6);
 }
+*/
+function _getColor(type, value, room) {
+    var perc = DataHandler.getNormalized(type, value, room) * 100;
+    console.log('PERCENTAGE: ' + perc);
+
+    if (perc < 20) {
+        return _colorList[0];
+    } 
+    if (perc < 40) {
+        return _colorList[1];
+    }
+    if (perc < 60) {
+        return _colorList[2];
+    }
+    if (perc < 80) {
+        return _colorList[3];
+    } 
+    return _colorList[4];
+    
+}
 
 
 /*
@@ -269,12 +304,13 @@ function _getColor(room) {
     objects in a row and one redered first.
     material.alphaTest has to be larger/smaller than opacity
 */
-function colorMap(floor) {
-    _colorMap = !_colorMap;
+function colorMap(type, value, floor) {
+    //_colorMap = !_colorMap;
+    _colorMap = true;
 
     function __applyColor(floor, room) {
         roomList[floor][room].material.transparent = false;
-        roomList[floor][room].material.color = new Color(_getColor(room));
+        roomList[floor][room].material.color = new Color(_getColor(type, value, room));
         //console.log(roomList[floor][room].material);
         //roomList[floor][room].material.color.setHex(_getColor(room));
         roomList[floor][room].material.needsUpdate = true;
@@ -311,7 +347,7 @@ function colorMap(floor) {
     THE Z coordinate for all rooms of a floor is the same!!!!
     So I need to compute it only once, for gods sake!!!
 */
-function pillarMap(floor) {
+function pillarMap(type, value, floor) {
 
     _pillarMap = !_pillarMap;
 
@@ -409,7 +445,7 @@ function pillarMap(floor) {
 
         } else {
             for (var roomKey in roomList[floor]) {
-                var scale = 1 + DataHandler.getNormalized(roomKey) * 4;
+                var scale = 1 + DataHandler.getNormalized(type, value, roomKey) * 3;
                 // Necessary to reverse scaling
                 _lastPillar[roomKey] = scale;
 
@@ -421,34 +457,74 @@ function pillarMap(floor) {
 
 }
 
+function _createGraphDiv(container) {
+    _graphDiv = document.createElement("div");
+    _graphDiv.setAttribute("id", "barGraph");
+    _graphDiv.classList.add('graph');
+    _graphDiv.style.left = container.style.left;
+    document.body.appendChild(_graphDiv);
+}
 
-function displayGraph() {
+
+function displayGraph(type, value, title, container) {
     if (DataHandler.hasData()) {
-        _graph = !_graph;
-        if (_graph) {
-            if (_graphDiv === undefined) {
-                _graphDiv = document.createElement("div");
-                _graphDiv.setAttribute("id", "barGraph");
-                _graphDiv.classList.add('graph');
-                document.body.appendChild(_graphDiv);
-            }
-
-            var _label = [];
-            var _values = [];
-            for (var room of roomListString) {
-                _label.push(room.substring(4, ));
-                _values.push(DataHandler.getNormalized(room) * 100);
-            }
-
-            new Chartist.Bar('#barGraph', {
-                labels: _label,
-                series: _values
-            }, {
-                distributeSeries: true
-            });
+        //_graph = !_graph;
+        
+        if (_graphDiv === undefined) {
+            _graphDiv = document.createElement("div");
+            _graphDiv.setAttribute("id", "barGraph");
+            _graphDiv.classList.add('graph');
+            _graphDiv.style.left = container.style.left;
+            document.body.appendChild(_graphDiv);
         }
+        _graphDiv.innerHTML = title;
+        var _label = [];
+        var _values = [];
+        for (var room of roomListString) {
+            _label.push(room.substring(4, ));
+            _values.push(DataHandler.getNormalized(type, value, room) * 100);
+        }
+
+        new Chartist.Bar('#barGraph', {
+            labels: _label,
+            series: _values
+        }, {
+            distributeSeries: true
+        });
+        
     }
 }
+
+function displayCurrentGraph(type, title, container) {
+    if (DataHandler.hasData()) {
+    //_graph = !_graph;
+    
+        if (_graphDiv === undefined) {
+            _graphDiv = document.createElement("div");
+            _graphDiv.setAttribute("id", "barGraph");
+            _graphDiv.classList.add('graph');
+            _graphDiv.style.left = container.style.left;
+            document.body.appendChild(_graphDiv);
+        }
+
+        _graphDiv.innerHTML = title;
+        var _label = [];
+        var _values = [];
+        for (var room of roomListString) {
+            _label.push(room.substring(4, ));
+            _values.push(DataHandler.getCurrentTotal(type, room));
+        }
+
+        new Chartist.Bar('#barGraph', {
+            labels: _label,
+            series: _values
+        }, {
+            distributeSeries: true
+        });
+    
+    }
+}
+
 
 /*
 function displayGraph() {
@@ -545,4 +621,4 @@ export {colorMap, pillarMap, apSphere,
         setCurrentFloor, setCurrentTime, 
         hideFloors, makeTransparent, displayGraph,
         visualUpdate, initColorMap, updateLegend,
-        splitBuilding}
+        splitBuilding, displayCurrentGraph}

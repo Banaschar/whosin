@@ -1,11 +1,13 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
-import {Mesh, MeshBasicMaterial, LoadingManager, MeshLambertMaterial} from 'three';
-import {scenePers} from './sceneHandler';
+import {Mesh, MeshBasicMaterial, LoadingManager,
+        PlaneGeometry, MeshLambertMaterial} from 'three';
+import {scenePers, sceneOrtho} from './sceneHandler';
 import {createTooltipEvents, setEventObjects} from './eventHandler';
 import ZipLoader from 'zip-loader';
 
 var models = [];
 var roomList = {};
+var roomList2d = {};
 var roomListString = [];
 var _nodes = {};
 var _hidden = false;
@@ -29,8 +31,7 @@ function _modifyTextures() {
     Load the zipped assets
 */
 function loadZip(path, manager) {
-    manager.setup('Loading packed assets...');
-    manager.loadType = 'zip';
+    manager.setup('Loading packed assets...', 'zip');
     var loader = new ZipLoader(path);
     loader.on('progress', manager.onProgress);
 
@@ -54,8 +55,7 @@ function loadZip(path, manager) {
  * Parse the model from the extracted blobs
  */
 function loadModel(zipLoader, manager) {
-    manager.setup('Loading Building...');
-    manager.loadType = 'model';
+    manager.setup('Loading Building...', 'model');
     manager.setURLModifier(function(url) {
         var reg = /\.dae$/;
 
@@ -82,7 +82,8 @@ function loadModel(zipLoader, manager) {
         //console.log(collada.scene);
         _loadNodes();
         //createTooltipEvents(roomList);
-        setEventObjects(roomList);
+        create2dView();
+        setEventObjects(roomList, roomList2d);
         // TODO: Refactor.
         //_modifyTextures();
 
@@ -115,6 +116,7 @@ function _loadNodes() {
             var _floor = (node.name.match(/\d+/g))[0].charAt(0);
             if (roomList.hasOwnProperty(_floor)) {
                 roomList[_floor][node.name] = node;
+                console.log(node)
             } else {
                 roomList[_floor] = {};
                 roomList[_floor][node.name] = node;
@@ -139,14 +141,42 @@ function _loadNodes() {
 
     // Update menu floor dropdown
     var drop = document.getElementById('floorDropdown');
+    var drop2 = document.getElementById('floorDropdown2');
     while (drop.options.length) {
         drop.remove(0);
+        drop2.remove(0);
     }
     drop.options.add(new Option('None', 'None'));
+    drop2.options.add(new Option('None', 'None'));
     for (var opt of Object.keys(roomList)) {
         drop.options.add(new Option('Etage' + opt, opt));
+        drop2.options.add(new Option('Etage' + opt, opt));
     }
 
+}
+
+function create2dView() {
+    var material = new MeshBasicMaterial({color: 0xffff00});
+    for (var floor in roomList) {
+        for (var room in roomList[floor]) {
+            var width = roomList[floor][room].geometry.boundingBox.max.x -
+                        roomList[floor][room].geometry.boundingBox.min.x;
+            var height = roomList[floor][room].geometry.boundingBox.max.y -
+                        roomList[floor][room].geometry.boundingBox.min.y;
+
+            //console.log('Width: ' + width + '. Height: ' + height);
+            var geo = new PlaneGeometry(width, height);
+            var mesh = new Mesh(geo, material);
+            mesh.geometry.scale(2, 2, 1);
+            mesh.translateX(Math.floor(Math.random() * 100));
+            mesh.translateY(Math.floor(Math.random() * 10));
+            if (!roomList2d.hasOwnProperty(floor)) {
+                roomList2d[floor] = {};
+            }
+            sceneOrtho.add(mesh);
+            roomList2d[floor][room] = mesh;
+        }
+    } 
 }
 
 /*

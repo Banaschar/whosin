@@ -101,47 +101,6 @@ function updateTooltip(thisRoom, visible) {
     }
 }
 
-
-/*
-var tooltipSprite;
-function initSpriteHandler() {
-    var _tooltip = false;
-    var _tooltipCanvas = document.createElement('canvas');
-    _tooltipCanvas.width = 256;
-    _tooltipCanvas.height = 128;
-    var _tooltipContext = _tooltipCanvas.getContext('2d');
-    _tooltipContext.font = "Bold 20px Arial";
-    _tooltipContext.fillStyle = "rgba(0,0,0,0.95)";
-    _tooltipContext.fillText('Test', 0, 20);
-
-    var _tooltipTexture = new Texture(_tooltipCanvas);
-    _tooltipTexture.needsUpdate = true;
-
-    var _tooltipMaterial = new SpriteMaterial({map: _tooltipTexture});
-    tooltipSprite = new Sprite(_tooltipMaterial);
-    tooltipSprite.scale.set(200,100,20);
-    tooltipSprite.position.set(50,50,1);
-}
-*/
-
-/*
-function updateTooltip(text) {
-    if (text === "") {
-        _tooltipContext.clearRect(0, 0, 300, 300);
-        _tooltipTexture.needsUpdate = true;
-    } else {
-        _tooltipContext.clearRect(0, 0, 640, 480);
-        var width = _tooltipContext.measureText(text).width;
-        _tooltipContext.fillStyle = "rgba(0, 0, 0, 0.95)";
-        _tooltipContext.fillRect = (0, 0, width+8, 20+8);
-        _tooltipContext.fillStyle = "rgba(255, 255, 255, 0.95)";
-        _tooltipContext.fillRect = (2, 2, width + 4, 20 + 4);
-        _tooltipContext.fillStyle = "rgba(0, 0, 0, 1)";
-        _tooltipContext.fillText(text, 4, 20);
-        _tooltipTexture.needsUpdate = true;
-    }
-}
-*/
 function _projectY(chartRect, bounds, value) {
   return chartRect.y1 - 
     (chartRect.height() * (value - bounds.min) / (bounds.range + bounds.step));
@@ -191,6 +150,48 @@ function _setGraph(room) {
     }
 }
 
+
+function updateAnnotation(pos, room) {
+    pos.x = (1 + pos.x) * window.innerWidth / 2;
+    pos.y = -(pos.y - 3) * window.innerHeight / 2;
+    var offsetX;
+    if (pos.x < 0.7 * window.innerWidth) {
+        offsetX = 100;
+    } else {
+        offsetX = -100;
+    }
+    //console.log(pos.x + ', ' + pos.y);
+    _div.style.top = `${pos.y + 15}px`;
+    _div.style.left = `${pos.x + offsetX}px`;
+    _textNode.textContent = room;
+
+    if (hasData()) {
+        _graphDiv = _createGraph(room);
+    }
+
+    _div.style.visibility = 'visible';
+}
+
+
+function updateAnnotationPosition(pos) {
+    pos.x = (1 + pos.x) * window.innerWidth / 2;
+    pos.y = -(pos.y - 1) * window.innerHeight / 2;
+    var offsetX;
+    if (pos.x < 0.7 * window.innerWidth) {
+        offsetX = 100;
+    } else {
+        offsetX = -100;
+    }
+    _div.style.top = `${pos.y + 15}px`;
+    _div.style.left = `${pos.x + offsetX}px`;
+}
+
+
+function hideAnnotation() {
+    _div.style.visibility = 'hidden';
+}
+
+/*
 function updateAnnotation(thisRoom, visible) {
     if (visible) {
         var pos = new Vector3();
@@ -207,7 +208,7 @@ function updateAnnotation(thisRoom, visible) {
         //console.log(pos.x.toString() + ', ' + pos.y.toString());
         pos.x = (1 + pos.x) * window.innerWidth / 2;
         pos.y = -(pos.y - 1) * window.innerHeight / 2;
-
+        //console.log(pos.x + ', ' + pos.y);
         _div.style.top = `${pos.y}px`;
         _div.style.left = `${pos.x}px`;
 
@@ -222,6 +223,8 @@ function updateAnnotation(thisRoom, visible) {
         _div.style.visibility = 'hidden';
     }
 }
+*/
+
 
 function initAnnotation() {
     _div = document.createElement('div');
@@ -241,4 +244,5 @@ function initAnnotation() {
     _div.appendChild(_graphDiv);  
 }
 
-export {tooltipSprite, updateTooltip, initSpriteHandler, initAnnotation, updateAnnotation};
+export {tooltipSprite, updateTooltip, initSpriteHandler, initAnnotation,
+        hideAnnotation, updateAnnotationPosition, updateAnnotation};

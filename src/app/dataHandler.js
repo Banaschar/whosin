@@ -1,4 +1,5 @@
 import * as ApData from './apData';
+import {statusMessage} from './eventHandler';
 
 var _baseUrl = 'http://graphite-kom.srv.lrz.de/render/?target=';
 var data = {};
@@ -6,6 +7,8 @@ var _ssid = ['eduroam', 'lrz', 'mwn-events', '@BayernWLAN', 'other'];
 // TODO: Combine with data
 var _timeListData = {};
 var roomData = {};
+var roomDataperAP = {};
+var current = {};
 var _loadingManager;
 
 function initDataHandler(manager) {
@@ -48,20 +51,22 @@ function _handleSuccess() {
         "time": [],
         "value": [],
     }
-
+    var last;
     for (var i of res) {
         _tmp = i.split(",");
 
         _time = new Date(_tmp[1]);
         if (_time.getDay() > 0 && _time.getDay() < 6 && _time.getHours() > 7 && _time.getHours() < 18) {
             _timeListData[ap]["time"].push(_time);
-            _timeListData[ap]["value"].push(Number(_tmp[_tmp.length - 1]) || 0)
+            last = Number(_tmp[_tmp.length - 1]) || 0
+            _timeListData[ap]["value"].push(last)
         }
 
 
         //_tmp = (Number(_tmp[_tmp.length - 1]) || 0);
         //result.push(_tmp);
     }
+    current[ap] = last;
 
     /*
     // old single value
@@ -76,10 +81,12 @@ function _handleSuccess() {
     //console.log(_timeListData[ap]);
     // Handle data per room
     calcPerRoom(ap);
+    statusMessage('All Data loaded', 'status');
 }
 
 function _handleError() {
     console.error(this.statusText);
+    statusMessage('Error loading Data', 'error');
 }
 
 function _prog(oEvent) {
@@ -91,7 +98,7 @@ function _doRequest(url, ap, timeframe) {
     req.arguments = Array.prototype.slice.call(arguments, 1);
     req.onload = _handleSuccess;
     req.onerror = _handleError;
-    req.onprogress = _loadingManager.onProgress;
+    //req.onprogress = _loadingManager.onProgress;
     //console.log(url);
     req.open("GET", url, true);
     req.send(null);
@@ -114,7 +121,7 @@ function _buildURL(ap, timeframe) {
  *  timeframe: String
  */
 function getData(aps, timeframe) {
-    _loadingManager.setup('Loading ' + ap + ' data...');
+    //_loadingManager.setup('Loading Access Point data...', 'data');
     for (var ap in aps) {
         var url = _buildURL(ap, timeframe);
         _doRequest(url, ap, timeframe);
@@ -169,6 +176,11 @@ function avgPerDay(room) {
     var index = 0;
     var stepCount = 0;
     var max = 0;
+    var resultAp = {
+        "time": [],
+        "value": [],
+        "max": [],
+    };
     var result = {
         "time": [],
         "value": [],
@@ -183,6 +195,9 @@ function avgPerDay(room) {
         }
         else {
             count = count / stepCount;
+            resultAp["time"].push(curr);
+            resultAp["value"].push(count);
+            resultAp["max"].push(max);
             result["time"].push(curr);
             result["value"].push(count * _perc);
             result["max"].push(max * _perc);
@@ -198,7 +213,19 @@ function avgPerDay(room) {
     result["value"].push((count / stepCount) * _perc);
     result["max"].push(max * _perc);
 
+    resultAp["time"].push(curr);
+    resultAp["value"].push(count / stepCount);
+    resultAp["max"].push(max);
+    roomDataperAP[room] = resultAp;
     return result;
+}
+
+function getCurrentTotal(type, room) {
+    if (type === 'room') {
+        return current[ApData.getRoomAp(room)] * getRoomPercentage(ApData.getRoomAp(room), room);
+    } else if (type === 'ap') {
+        return current[ApData.getRoomAp(room)];
+    }
 }
 
 /*
@@ -263,37 +290,58 @@ function cleanData(ap) {
     
 }
 
+function getApCapacity(ap) {
+    var _sum = 0;
+    for (var i of ApData.getApRooms(ap)) {
+        _sum += ApData.getRoomCapacity(i);
+    }
+    return _sum;
+}
+
 /*
     Returns the capacity in regards to the total capacity of the ap
     in percent.
 */
 function getRoomPercentage(ap, room) {
-    var _sum = 0;
-    for (var i of ApData.getApRooms(ap)) {
-        _sum += ApData.getRoomCapacity(i);
-    }
-    return ApData.getRoomCapacity(room) / _sum;
+    return ApData.getRoomCapacity(room) / getApCapacity(ap);
 }
+
+
+function getPerAP(room) {
+    var avg = roomDataperAP[room]["max"].reduce(
+                function(a,b) {return a + b}, 0) / roomDataperAP[room]["max"].length;
+    return avg / getApCapacity(ApData.getRoomAp(room));
+}
+
+
 
 /*
     Get normalized value of percentage of average logins for specified room
+    value = 'max' | 'value'
+    type = 'room' | 'ap' -> data per room or per ap
 */
-function getNormalized(room) {
+function getNormalized(type, value, room) {
     if (ApData.getRoomCapacity(room) === 0) {
         return 0;
     }
-    var _ap = ApData.getRoomAp(room);
 
-    var avg = roomData[room]["max"].reduce(
-                function(a,b) {return a + b;}, 0) / roomData[room]["max"].length;
-    var p = avg * getRoomPercentage(_ap, room);
-    //console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
-    // Normalize on room capacity
-    return p / ApData.getRoomCapacity(room);
+    if (type === 'room') {
+        var avg = roomData[room][value].reduce(
+                    function(a,b) {return a + b;}, 0) / roomData[room][value].length;
+        // var p = avg * getRoomPercentage(_ap, room);
+        //console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
+        // Normalize on room capacity
+        return avg / ApData.getRoomCapacity(room);
+    } else if (type === 'ap') {
+        var avg = roomDataperAP[room][value].reduce(
+                function(a,b) {return a + b}, 0) / roomDataperAP[room][value].length;
+        return avg / ApData.getRoomCapacity(room);
+    }
 }
 
 function hasData() {
     return Object.keys(roomData).length != 0;
 }
 
-export {data, getData, getNormalized, roomData, totalAvgPerDay, hasData, initDataHandler};
+export {data, getData, getNormalized, roomData, 
+        getCurrentTotal, totalAvgPerDay, hasData, initDataHandler};

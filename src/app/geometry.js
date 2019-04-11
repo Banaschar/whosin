@@ -2,10 +2,11 @@ import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
 import {Mesh, MeshBasicMaterial, LoadingManager,
         PlaneGeometry, MeshLambertMaterial} from 'three';
 import {scenePers, sceneOrtho} from './sceneHandler';
-import {createTooltipEvents, setEventObjects} from './eventHandler';
+import {setEventObjects} from './eventHandler';
 import ZipLoader from 'zip-loader';
+import {updateAPcolorMap} from './visualization';
+import {updateMenu} from './guiHandler';
 
-var models = [];
 var roomList = {};
 var roomList2d = {};
 var roomListString = [];
@@ -77,15 +78,9 @@ function loadModel(zipLoader, manager) {
     });
 
     caLoader.load(daeURL, function (collada) {
-        models.push(collada.scene);
         scenePers.add(collada.scene);
-        //console.log(collada.scene);
-        _loadNodes();
-        //createTooltipEvents(roomList);
-        create2dView();
-        setEventObjects(roomList, roomList2d);
-        // TODO: Refactor.
-        //_modifyTextures();
+        _loadNodes(collada.scene);
+        _updateModelDependent();
 
     }, manager.onProgress, manager.onError);
 
@@ -96,12 +91,12 @@ function loadModel(zipLoader, manager) {
     Refactor after initial tests, to provide list of stuff to seatch for
     -> Add material list, in which to store all materials used
 */
-function _loadNodes() {
+function _loadNodes(model) {
     var node;
     var _pat1 = /^Room/;
     var _pat2 = /^apa/;
 
-    for (node of models[0].children) {
+    for (node of model.children) {
         if (!(node instanceof Mesh)) {
             continue;
         }
@@ -116,7 +111,6 @@ function _loadNodes() {
             var _floor = (node.name.match(/\d+/g))[0].charAt(0);
             if (roomList.hasOwnProperty(_floor)) {
                 roomList[_floor][node.name] = node;
-                console.log(node)
             } else {
                 roomList[_floor] = {};
                 roomList[_floor][node.name] = node;
@@ -133,29 +127,19 @@ function _loadNodes() {
                                           transparent: true, opacity: 0.5});
     for (var floor in roomList) {
         for (var key in roomList[floor]) {
-            //roomList[floor][key].material = roomList[floor][key].material.clone();
             roomList[floor][key].material = meshBasic.clone();
-            //console.log(roomList[floor][key].material);
         }
     }
-
-    // Update menu floor dropdown
-    var drop = document.getElementById('floorDropdown');
-    var drop2 = document.getElementById('floorDropdown2');
-    while (drop.options.length) {
-        drop.remove(0);
-        drop2.remove(0);
-    }
-    drop.options.add(new Option('None', 'None'));
-    drop2.options.add(new Option('None', 'None'));
-    for (var opt of Object.keys(roomList)) {
-        drop.options.add(new Option('Etage' + opt, opt));
-        drop2.options.add(new Option('Etage' + opt, opt));
-    }
-
 }
 
-function create2dView() {
+function _updateModelDependent() {
+    _create2DView();
+    setEventObjects(roomList, roomList2d);
+    updateMenu(roomList);
+    updateAPcolorMap();
+}
+
+function _create2DView() {
     var material = new MeshBasicMaterial({color: 0xffff00});
     for (var floor in roomList) {
         for (var room in roomList[floor]) {
@@ -208,9 +192,8 @@ function setTransparency(mat, opac) {
 }
 
 /*
-    Hide floors above current. Needs an argument later
-    Still hacky, uses predefined roomList for floor 3 and 4 to get height
-    TODO: Maybe change to use Material.clippingPlanes
+    Hide floors above specified height
+    Still feels hacky, maybe change to use Material.clippingPlanes
 */
 function hideGeometry(_height) {
     if (_hidden) {
@@ -235,9 +218,10 @@ function hideGeometry(_height) {
     }
 }
 
+/* Experimental: Try to split the 3D model into floors
+ * Needs a working implementation for cutting meshes with planes
+ */
 function moveGeometry() {
-    //console.log(Object.keys(roomList["3"])[0]);
-    
     var _height1 = roomList["3"][Object.keys(roomList["3"])[0]].geometry.boundingBox.min.z;
     var _height2 = roomList["3"][Object.keys(roomList["3"])[0]].geometry.boundingBox.max.z;
 
@@ -248,8 +232,6 @@ function moveGeometry() {
             _nodes[key].translateZ(- _nodes[key].geometry.boundingBox.min.z);
         }
     }
-    
-
 }
 
 export {loadModel, hideGeometry, setTransparency, makeTransparent, 

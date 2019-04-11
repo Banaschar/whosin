@@ -5,8 +5,9 @@ import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color,
         SpriteMaterial, Sprite, Geometry, Line, LineBasicMaterial,
         Texture, DoubleSide, PlaneGeometry} from "three";
 import {scenePers, cameraPers, renderer, sceneOrtho} from "./sceneHandler";
-import * as ApData from './apData';
+import {statusMessage} from "./eventHandler"
 
+import * as ApData from './apData';
 import * as DataHandler from './dataHandler';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
@@ -18,8 +19,6 @@ var _pillarMap = false;
 var _apSphere = false;
 var _graph = false;
 var _sphereList = [];
-var _currentFloor = 'None';
-var _currentTime = 'None';
 var _lastFloor = 'None';
 var _lastPillar = {};
 var _lut;
@@ -30,103 +29,18 @@ var _graphDiv;
 //var _colorList = [0xF1EEF6, 0xBDC9E1, 0x74A9CF, 0x2B8CBE, 0x045A8D];
 var _colorList = [0xffffe0, 0xffbd84, 0xf47461, 0xcb2f44, 0x8b0000];
 
-/*
-function createLegend(container) {
-    var numColors = 256;
-    var ticks = 5;
-    var maxEle = 100;
-    var map =  [[ 0.0, '0x0000FF' ], [ 0.2, '0x00FFFF' ], 
-            [ 0.5, '0x00FF00' ], [ 0.8, '0xFFFF00' ], 
-            [ 1.0, '0xFF0000' ]];
-    var legend = document.createElement('canvas');
-    var ctx = legend.getContext('2d');
-    legend.setAttribute('width', 1);
-    legend.setAttribute('height', numColors);
-
-    var imageData = ctx.getImageData(0, 0, 1, numColors);
-    var data = imageData.data;
-    var k = 0;
-    var step = 1.0 / numColors;
-
-    for ( var i = 1; i >= 0; i -= step ) {
-
-        for ( var j = map.length - 1; j >= 0; j -- ) {
-
-            if ( i < map[ j ][ 0 ] && i >= map[ j - 1 ][ 0 ] ) {
-
-                var min = map[ j - 1 ][ 0 ];
-                var max = map[ j ][ 0 ];
-
-                var minColor = new Color( 0xffffff ).setHex( map[ j - 1 ][ 1 ] );
-                var maxColor = new Color( 0xffffff ).setHex( map[ j ][ 1 ] );
-
-                var color = minColor.lerp( maxColor, ( i - min ) / ( max - min ) );
-
-                data[ k * 4 ] = Math.round( color.r * 255 );
-                data[ k * 4 + 1 ] = Math.round( color.g * 255 );
-                data[ k * 4 + 2 ] = Math.round( color.b * 255 );
-                data[ k * 4 + 3 ] = 255;
-
-                k += 1;
-
-            }
-
-        }
-
-    }
-
-    // Hacky: putImageData doesn't allow for scale, draw to new canvas instead
-    ctx.putImageData(imageData, 0, 0);
-    var destCanvas = document.createElement('canvas');
-    destCanvas.setAttribute('width', 28); //28
-    destCanvas.setAttribute('height', numColors); //256
-    var destCtx = destCanvas.getContext('2d');
-    destCtx.scale(28, 1);
-    destCtx.drawImage(legend, 0, 0);
-    
-    var offsetX = 28;
-    var offsetY = 30;
-    var delta = numColors / (ticks - 1);
-    var deltaEle = Math.round(maxEle / (ticks - 1));
-    var legendText = document.createElement('canvas');
-    legendText.setAttribute('width', 300);
-    legendText.setAttribute('height', 300);
-    
-    legendText.setAttribute("id", "legendText");
-    var textCtx = legendText.getContext('2d');
-    textCtx.drawImage(destCanvas, 0, 30);
-    textCtx.font = "18px Arial";
-    textCtx.fillText("Average Usage [%]", 0, 18);
-    textCtx.font = "12px Arial";
-
-    for (var i = 0; i <= ticks - 1; i++) {
-        textCtx.moveTo(offsetX, Math.round(offsetY + i * delta));
-        textCtx.lineTo(50, Math.round(offsetY + i * delta));
-        textCtx.stroke();
-        var t = (ticks - 1 - i) * deltaEle;
-
-        if (i < ticks - 1) { 
-            textCtx.fillText(t.toString(), 52, Math.round(offsetY + i * delta) + 10);
-        } else {
-            textCtx.fillText(t.toString(), 52, Math.round(offsetY + i * delta));
-        }
-    }
-    
-    //document.body.appendChild(legendText);
-    container.appendChild(legendText);
-}
-*/
+/* Predefine list of colors, assigned to access points at runtime */
+var _apColorList = [0xd11141, 0x00b159, 0x00aedb, 0xf37735];
+var _colorMapAP = {};
 
 function createLegend(container) {
 
     function __createListEle(color, text) {
-        console.log(color);
         var li = document.createElement('li');
         var sp = document.createElement('SPAN');
         sp.style.background = color;
         li.innerHTML = text;
         li.appendChild(sp);
-        console.log(sp.style.background);
         return li;
     }
 
@@ -140,9 +54,10 @@ function createLegend(container) {
 
     var list = document.createElement('ul');
     list.setAttribute('class', 'legend-labels');
-    for (var i = 0; i < 5; i++) {
+    var step = 100 / _colorList.length;
+    for (var i = 0; i < _colorList.length; i++) {
         var color = '#' + ('000000'+(_colorList[i]).toString(16)).substr(-6);
-        list.appendChild(__createListEle(color, ''+(i+1)*20+'%'))
+        list.appendChild(__createListEle(color, ''+(i+1)*step+'%'))
     }
     scale.appendChild(list);
     legend.appendChild(title);
@@ -151,27 +66,37 @@ function createLegend(container) {
 }
 
 
-function initColorMap(container) {
-    _lut = new Lut('rainbow', 256);
-    _lut.setMax(100);
-    _lut.setMin(0);
-
+function initColorMap(container, colorsMap) {
+    /* -> Need working config file first
+    try {
+        _colorMap = colorsMap.map(function (x) {return parseInt(x, 16)});
+    }
+    catch(err) {
+        statusMessage('Malformed Color Map', 'error');
+    }
+    */
     createLegend(container);
+}
+
+/* Called when new building model is loaded */
+function updateAPcolorMap() {
+    var i = 0;
+    for (var key in apList) {
+        /* No more predifend colors, create randoms */
+        if (i === _apColorList.length) {
+            _colorMapAP[key] = ('000000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6)
+        } else {
+            _colorMapAP[key] = _apColorList[i];
+        }
+        i++;
+    }
 }
 
 function apSphere() {
     _apSphere = !_apSphere;
-    var apColorList = {
-        'apa01-3bb': 0xd11141, 
-        'apa02-3bb': 0x00b159,
-        'apa01-4bb': 0x00aedb,
-        'apa03-4bb': 0xf37735
-    };
     function __appColor(floor, room) {
         roomList[floor][room].material.transparent = false;
-        roomList[floor][room].material.color = new Color(apColorList[ApData.getRoomAp(room)]);
-        //console.log(roomList[floor][room].material);
-        //roomList[floor][room].material.color.setHex(_getColor(room));
+        roomList[floor][room].material.color = new Color(_colorMapAP[ApData.getRoomAp(room)]);
         roomList[floor][room].material.needsUpdate = true;
     }
     if (_apSphere) {
@@ -229,58 +154,10 @@ function apSphere() {
     }
 }
 
-/*
-    Lut Color Map
-*/
-/*
-function _getColor(room) {
-    var num = DataHandler.getNormalized(room);
-    console.log(num);
-    return _lut.getColor(50);
-}
-*/
-/*
-    Other color map
-
-function _getColor(room) {
-    var colors = [0xffffb2, 0xfecc5c, 0xfd8d3c, 0xf03b20, 0xbd0026];
-    var num = DataHandler.getNormalized(_currentTime, room);
-    num *= 4;
-    num = Math.floor(num);
-    return colors[num];
-}
-*/
-/*
-    Get color between green and red
-    Visualization._currentTime][AccessPoints.roomAp[room]
-*/
-/*
-function _getColor(room) {
-    var hue = ((1 - DataHandler.getNormalized(room)) * 120).toString(10);
-    return ["hsl(",hue,",100%,50%)"].join("");
-}
-*/
-
-/*
-function _getColor(room) {
-    var perc = 100 - DataHandler.getNormalized(room) * 100;
-    var r, g, b = 0;
-    if(perc < 50) {
-        r = 255;
-        g = Math.round(5.1 * perc);
-    }
-    else {
-        g = 255;
-        r = Math.round(510 - 5.10 * perc);
-    }
-    var h = r * 0x10000 + g * 0x100 + b * 0x1;
-    return '#' + ('000000' + h.toString(16)).slice(-6);
-}
-*/
 function _getColor(type, value, room) {
     var perc = DataHandler.getNormalized(type, value, room) * 100;
-    console.log('PERCENTAGE: ' + perc);
 
+    /*
     if (perc < 20) {
         return _colorList[0];
     } 
@@ -294,6 +171,13 @@ function _getColor(type, value, room) {
         return _colorList[3];
     } 
     return _colorList[4];
+    */
+
+    if (perc < 100) {
+        return _colorList[Math.floor(perc / (100 / _colorList.length))]
+    } else {
+        return _colorList[_colorList.length - 1];
+    }
     
 }
 
@@ -598,27 +482,7 @@ function hideFloors(floor) {
     }
 }
 
-function splitBuilding() {
-    moveGeometry();
-}
-
-function setCurrentFloor(f) {
-    _currentFloor = f;
-}
-
-function setCurrentTime(t) {
-    _currentTime = t;
-}
-
-/*
-    Function that updates all objects added to update Queue
-*/
-function visualUpdate() {
-
-}
-
 export {colorMap, pillarMap, apSphere, 
-        setCurrentFloor, setCurrentTime, 
-        hideFloors, makeTransparent, displayGraph,
-        visualUpdate, initColorMap, updateLegend,
-        splitBuilding, displayCurrentGraph}
+        setCurrentFloor, hideFloors, makeTransparent, 
+        displayGraph, initColorMap, updateLegend,
+        displayCurrentGraph, updateAPcolorMap}

@@ -9,9 +9,6 @@ import {visualUpdate, initColorMap, updateLegend} from './visualization';
 import Stats from '../lib/stats.min';
 import {initDataHandler} from './dataHandler';
 
-// remove
-import {Color} from 'three';
-
 // TODO: Import all files in the assets directory and load by file name (building name)
 import ASSETS from '../assets/assets.zip';
 
@@ -19,6 +16,7 @@ var stats;
 var container;
 
 function init() {
+    console.log(ASSETS);
     container = document.createElement('div');
     container.setAttribute('class', 'container');
     document.body.appendChild(container);
@@ -26,13 +24,12 @@ function init() {
     initSideBar(container);
     var manager = initLoadingManager();
     initScene(container);
-    loadZip(ASSETS, manager);
+    //loadZip(ASSETS, manager);
     // TODO: Combine sprite and annotation init methods
     initSpriteHandler();
     initAnnotation();
     
     initDataHandler(manager);
-    //initGui();
     initColorMap(container);
 
     //stats = new Stats();
@@ -42,8 +39,8 @@ function init() {
     //document.body.appendChild(stats.dom);
 
     initEventHandler(container);
-    console.log(renderer.domElement.clientWidth);
-    console.log(renderer.domElement.clientHeight);
+    //console.log(renderer.domElement.clientWidth);
+    //console.log(renderer.domElement.clientHeight);
     //renderer.setSize(renderer.domElement.clientWidth, renderer.domElement.clientHeight);
     renderer2.setSize(renderer2.domElement.clientWidth, renderer2.domElement.clientHeight);
 }

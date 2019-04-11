@@ -58,7 +58,7 @@ function initLoadingManager() {
     };
 
     manager.onProgress = function(xhr) {
-        console.log(xhr.loaded);
+        //console.log(xhr.loaded);
         progress.style.width = xhr.loaded / xhr.total * 100 + '%';
     };
 

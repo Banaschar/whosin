@@ -2,6 +2,7 @@ const path = require('path');
 const ThreeWebpackPlugin = require('@wildpeaks/three-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 //const webpack = require('webpack');
 
 module.exports = {
@@ -20,7 +21,7 @@ module.exports = {
             new ThreeWebpackPlugin(),
             new HtmlWebpackPlugin({
                 title: 'Whos in'
-            }),
+            })
     ],
     module: {
         rules: [

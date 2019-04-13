@@ -3,33 +3,51 @@ import {initScene, controls, renderer,
         viewports, controlsOrtho, renderer2} from './sceneHandler';
 import {loadModel, loadZip} from './geometry';
 import {initSpriteHandler, initAnnotation} from './spriteHandler';
-import {initEventHandler, initLoadingManager} from './eventHandler';
+import {initEventHandler} from './eventHandler';
 import {initGui, initSideBar} from './guiHandler';
 import {visualUpdate, initColorMap, updateLegend} from './visualization';
 import Stats from '../lib/stats.min';
 import {initDataHandler} from './dataHandler';
+import config from "../config.json";
+import {statusMessage} from './eventHandler.js';
+import {setConfig} from './conf.js';
 
 // TODO: Import all files in the assets directory and load by file name (building name)
-import ASSETS from '../assets/assets.zip';
+//import ASSETS from '../assets/0501.zip';
 
 var stats;
 var container;
 
 function init() {
-    console.log(ASSETS);
+    //console.log(ASSETS);
     container = document.createElement('div');
     container.setAttribute('class', 'container');
     document.body.appendChild(container);
 
-    initSideBar(container);
-    var manager = initLoadingManager();
+    try {
+        console.log(ASSETS);
+        var assetList = ASSETS;
+    } catch(err) {
+        console.log(err);
+        var assetList = ['0500'];
+    }
+    initSideBar(container, assetList);
+
+    try {
+        var CONFIG = JSON.parse(CONF);
+    } catch(err) {
+        console.log('err');
+        statusMessage('Malformed config file. Using base config', 'error');
+        var CONFIG = config;
+    }
+    setConfig(CONFIG);
     initScene(container);
+    
     //loadZip(ASSETS, manager);
     // TODO: Combine sprite and annotation init methods
     initSpriteHandler();
     initAnnotation();
-    
-    initDataHandler(manager);
+
     initColorMap(container);
 
     //stats = new Stats();

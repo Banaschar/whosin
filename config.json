@@ -36,10 +36,5 @@
         "apa03-4bb": ["Room4145-4151", "Room4168", "Room4170A", "Room4170B"]
     },
 
-    "ColorMap": ["0xffffe0", "0xffbd84", "0xf47461", "0xcb2f44", "0x8b0000"],
-
-    "BarGraph": {
-        "ColorBar": "0x207DFF",
-        "ColorTargetLine": "0x8b0000"
-    }
+    "ColorMap": ["0xffffe0", "0xffbd84", "0xf47461", "0xcb2f44", "0x8b0000"]
 }

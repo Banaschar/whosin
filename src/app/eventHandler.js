@@ -1,7 +1,7 @@
 import {Vector2, Vector3, Color, LoadingManager, Raycaster} from "three";
 import {cameraPers, cameraOrtho, renderer, renderer2, scenePers,
         updateCameras, updateViewports, viewports} from "./sceneHandler";
-import {rooms} from "./geometry";
+import {rooms, modelIsLoaded} from "./geometry";
 import {Interaction} from 'three.interaction';
 import {updateTooltip, updateAnnotation, hideAnnotation, 
         updateAnnotationPosition} from "./spriteHandler";
@@ -13,6 +13,7 @@ var _raycaster;
 var _rooms = [];
 var _rooms2d = [];
 var _currHoverObject = null;
+var _manager;
 
 function statusMessage(msg, type) {
     var field = document.getElementById('statusBar');
@@ -24,12 +25,13 @@ function statusMessage(msg, type) {
     field.innerHTML = msg;
 }
 
-function initLoadingManager() {
-    var manager = new LoadingManager();
+function _initLoadingManager() {
+    _manager = new LoadingManager();
     var bar = document.createElement("div");
     bar.setAttribute("id", "loadingBar");
     var overlay = document.createElement("div");
     overlay.setAttribute("id", "loadingScreen");
+    overlay.classList.add('loadingScreenHidden');
     var progress = document.createElement("span");
     progress.setAttribute("id", "progress");
     var textField = document.createElement("div");
@@ -51,18 +53,18 @@ function initLoadingManager() {
         loadType = type;
     }
 
-    manager.onLoad = function() {
+    _manager.onLoad = function() {
         overlay.classList.add('loadingScreenHidden');
         progress.style.width = 0;
         statusMessage(loadType + ' erfolgreich geladen', 'status');
     };
 
-    manager.onProgress = function(xhr) {
+    _manager.onProgress = function(xhr) {
         //console.log(xhr.loaded);
         progress.style.width = xhr.loaded / xhr.total * 100 + '%';
     };
 
-    manager.onError = function(e) {
+    _manager.onError = function(e) {
         console.error(e);
         overlay.classList.add('loadingScreenHidden');
         progress.style.width = 0;
@@ -71,8 +73,10 @@ function initLoadingManager() {
         //console.log('error', event.error);
         //progress.style.backgroundColor = 'red';
     };
+}
 
-    return manager;
+function getLoadingManager() {
+    return _manager;
 }
 
 function onDocumentMouseMove(event) {
@@ -111,6 +115,7 @@ function initEventHandler(container) {
     _mouse = new Vector2();
     _clientMouse = new Vector2();
     _raycaster = new Raycaster();
+    _initLoadingManager();
     window.addEventListener('mousemove', function(event) {
         _onMouseMove(event, container);
     }, false);
@@ -205,9 +210,11 @@ function _checkIntersections() {
 }
 
 function _onMouseMove(event, container) {
-    _updateMouse(event, container);
-    _checkIntersections();
+    if (modelIsLoaded()) {
+        _updateMouse(event, container);
+        _checkIntersections();
+    }
 }
 
-export {initEventHandler, createTooltipEvents, initLoadingManager,
-        setEventObjects, onWindowResize, statusMessage};
+export {initEventHandler, createTooltipEvents,
+        setEventObjects, onWindowResize, statusMessage, getLoadingManager};

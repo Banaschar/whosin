@@ -1,12 +1,18 @@
 import * as app from './app/app.js';
 import "./css/style.css";
-import config from "./config.json";
 
 /*
     Add webgl test
 */
 
-console.log(config);
+//console.log(config);
+/*
+if (!CONF) {
+    import CONF from "./config.json";
+}
+*/
+
+
 
 app.init();
 app.render();

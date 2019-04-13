@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Whos in</title>
+  </head>
+    <body>
+        <script type="text/javascript">
+            var CONF = {{ config|tojson }};
+            var ASSETS = {{ assets|tojson }};
+        </script>
+        <script src="{{ url_for('static', filename='scripts/main.bundle.js') }}">
+        </script>
+  </body>
+</html>

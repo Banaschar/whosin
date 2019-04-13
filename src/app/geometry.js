@@ -2,7 +2,7 @@ import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
 import {Mesh, MeshBasicMaterial, LoadingManager,
         PlaneGeometry, MeshLambertMaterial} from 'three';
 import {scenePers, sceneOrtho} from './sceneHandler';
-import {setEventObjects} from './eventHandler';
+import {setEventObjects, getLoadingManager} from './eventHandler';
 import ZipLoader from 'zip-loader';
 import {updateAPcolorMap} from './visualization';
 import {updateMenu} from './guiHandler';
@@ -16,6 +16,11 @@ var _hideList;
 var transparency = 1.0;
 var _materialList = {};
 var apList = {};
+var _modelLoaded = false;
+
+function modelIsLoaded() {
+    return _modelLoaded;
+}
 
 /*
 // Dynamic textures to print room number on the top of room cube
@@ -31,7 +36,8 @@ function _modifyTextures() {
 /*
     Load the zipped assets
 */
-function loadZip(path, manager) {
+function loadZip(path) {
+    var manager = getLoadingManager();
     manager.setup('Loading packed assets...', 'zip');
     var loader = new ZipLoader(path);
     loader.on('progress', manager.onProgress);
@@ -81,6 +87,7 @@ function loadModel(zipLoader, manager) {
         scenePers.add(collada.scene);
         _loadNodes(collada.scene);
         _updateModelDependent();
+        _modelLoaded = true;
 
     }, manager.onProgress, manager.onError);
 
@@ -235,4 +242,4 @@ function moveGeometry() {
 }
 
 export {loadModel, hideGeometry, setTransparency, makeTransparent, 
-        roomList, roomListString, apList, moveGeometry, loadZip};
+        roomList, roomListString, apList, moveGeometry, loadZip, modelIsLoaded};

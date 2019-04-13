@@ -53,7 +53,7 @@ function createDropDown(optionsText, optionsValues, id, changeFunction) {
  * Create Menu
  * TODO: Make sure all elements are li items
  */
-function createMenu(sidebar) {
+function createMenu(sidebar, assetList) {
     var menu = document.createElement('ul');
     menu.setAttribute('class', 'mainmenu');
     
@@ -61,13 +61,15 @@ function createMenu(sidebar) {
 
     /* Time Select Elements */
     var b = document.createElement('b');
-    b.innerHTML = 'Time frame';
+    b.innerHTML = 'Time frame: ';
     menu.appendChild(b);
     menu.appendChild(createDropDown(['None', '24h', 'Month', '6 Months', '12 Months'], 
         ['None', '-24h', '-1month', '-6months', '-12months'], 'timeSelect', getData));
-    //var loadM = document.createElement('b');
-    //loadM.innerHTML = 'Building';
-    //menu.appendChild(createDropDown
+    var loadM = document.createElement('b');
+    loadM.innerHTML = 'Building: ';
+    menu.appendChild(loadM);
+    assetList.unshift('None');
+    menu.appendChild(createDropDown(assetList, assetList, 'modelSelect', getModel));
 
     /* Menu items */
     var item2 = createListEle(createA('#', 'Data per Room'));
@@ -181,7 +183,7 @@ function createMenu(sidebar) {
 
 }
 
-function initSideBar(container) {
+function initSideBar(container, assetList) {
     // border
     _container = container;
     var border = document.createElement('div');
@@ -212,7 +214,7 @@ function initSideBar(container) {
         EventHandler.onWindowResize(container);
     }));
 
-    createMenu(sidebar);
+    createMenu(sidebar, assetList);
     document.body.appendChild(border);
     document.body.appendChild(sidebar);
 }
@@ -265,6 +267,15 @@ function getData() {
 
 function displayAccessPoints() {
     Visualization.apSphere();
+}
+
+function getModel() {
+    var d = document.getElementById('modelSelect');
+    var a = d.options[d.selectedIndex].value;
+    var assetUrl = window.location.protocol + '//' + window.location.host + 
+            '/getAsset/' + a;
+    console.log('Asset URL: ' + assetUrl);
+    Geometry.loadZip(assetUrl);
 }
 
 /* Called when new model has been loaded */

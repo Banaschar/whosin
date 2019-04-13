@@ -7,7 +7,7 @@ import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color,
 import {scenePers, cameraPers, renderer, sceneOrtho} from "./sceneHandler";
 import {statusMessage} from "./eventHandler"
 
-import * as ApData from './apData';
+import * as Conf from './conf';
 import * as DataHandler from './dataHandler';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
@@ -26,8 +26,7 @@ var _legendSprite;
 var _updateQueue = [];
 var _tmpPillarGeometry = [];
 var _graphDiv;
-//var _colorList = [0xF1EEF6, 0xBDC9E1, 0x74A9CF, 0x2B8CBE, 0x045A8D];
-var _colorList = [0xffffe0, 0xffbd84, 0xf47461, 0xcb2f44, 0x8b0000];
+var _colorList;
 
 /* Predefine list of colors, assigned to access points at runtime */
 var _apColorList = [0xd11141, 0x00b159, 0x00aedb, 0xf37735];
@@ -56,7 +55,8 @@ function createLegend(container) {
     list.setAttribute('class', 'legend-labels');
     var step = 100 / _colorList.length;
     for (var i = 0; i < _colorList.length; i++) {
-        var color = '#' + ('000000'+(_colorList[i]).toString(16)).substr(-6);
+        //var color = '#' + ('000000'+(_colorList[i]).toString(16)).substr(-6);
+        var color = _getCSScolor(_colorList[i]);
         list.appendChild(__createListEle(color, ''+(i+1)*step+'%'))
     }
     scale.appendChild(list);
@@ -66,15 +66,13 @@ function createLegend(container) {
 }
 
 
-function initColorMap(container, colorsMap) {
-    /* -> Need working config file first
+function initColorMap(container) {
     try {
-        _colorMap = colorsMap.map(function (x) {return parseInt(x, 16)});
+        _colorList = Conf.getColors().map(function (x) {return parseInt(x, 16)});
     }
     catch(err) {
         statusMessage('Malformed Color Map', 'error');
     }
-    */
     createLegend(container);
 }
 
@@ -96,7 +94,7 @@ function apSphere() {
     _apSphere = !_apSphere;
     function __appColor(floor, room) {
         roomList[floor][room].material.transparent = false;
-        roomList[floor][room].material.color = new Color(_colorMapAP[ApData.getRoomAp(room)]);
+        roomList[floor][room].material.color = new Color(_colorMapAP[Conf.getRoomAp(room)]);
         roomList[floor][room].material.needsUpdate = true;
     }
     if (_apSphere) {
@@ -154,31 +152,21 @@ function apSphere() {
     }
 }
 
-function _getColor(type, value, room) {
-    var perc = DataHandler.getNormalized(type, value, room) * 100;
+function _getCSScolor(color) {
+    return '#' + ('000000'+(color).toString(16)).substr(-6);
+}
 
-    /*
-    if (perc < 20) {
-        return _colorList[0];
-    } 
-    if (perc < 40) {
-        return _colorList[1];
-    }
-    if (perc < 60) {
-        return _colorList[2];
-    }
-    if (perc < 80) {
-        return _colorList[3];
-    } 
-    return _colorList[4];
-    */
-
+function _getColorValue(perc) {
     if (perc < 100) {
         return _colorList[Math.floor(perc / (100 / _colorList.length))]
     } else {
         return _colorList[_colorList.length - 1];
     }
-    
+}
+
+function _getColor(type, value, room) {
+    var perc = DataHandler.getNormalized(type, value, room) * 100;
+    return _getColorValue(perc);
 }
 
 
@@ -369,11 +357,20 @@ function displayGraph(type, value, title, container) {
             _values.push(DataHandler.getNormalized(type, value, room) * 100);
         }
 
-        new Chartist.Bar('#barGraph', {
+        var chart = new Chartist.Bar('#barGraph', {
             labels: _label,
             series: _values
         }, {
             distributeSeries: true
+        });
+
+        /* Dynamically modify bar colors */
+        chart.on('draw', function(context) {
+            if (context.type === 'bar') {
+                context.element.attr({
+                    style: 'stroke: ' + _getCSScolor(_getColorValue(context.value.y)) + ';'
+                });
+            }
         });
         
     }

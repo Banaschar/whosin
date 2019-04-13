@@ -1,7 +1,7 @@
 import {Texture, SpriteMaterial, Sprite, CanvasTexture, Vector3} from "three";
 import {scenePers, cameraPers, renderer} from './sceneHandler';
 import {totalAvgPerDay, hasData} from './dataHandler'
-import * as ApData from './apData';
+import * as Conf from './conf';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
 import "../css/style.css";
@@ -108,27 +108,29 @@ function _projectY(chartRect, bounds, value) {
 
 function _createGraph(room) {
     var values = totalAvgPerDay(room);
-    var chart = new Chartist.Bar('#roomGraph', {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-        series: values
-    }, {
-        distributeSeries: true,
-        high: Math.max(Math.max.apply(null, values), ApData.getRoomCapacity(room)),
-        targetLine: {
-            value: ApData.getRoomCapacity(room),
-            class: 'ct-target-line'
-        }
-    });
-    chart.on('created', function(context) {
-        var targetLineY = _projectY(context.chartRect, context.bounds, context.options.targetLine.value);
+    if (values) {
+        var chart = new Chartist.Bar('#roomGraph', {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
+            series: values
+        }, {
+            distributeSeries: true,
+            high: Math.max(Math.max.apply(null, values), Conf.getRoomCapacity(room)),
+            targetLine: {
+                value: Conf.getRoomCapacity(room),
+                class: 'ct-target-line'
+            }
+        });
+        chart.on('created', function(context) {
+            var targetLineY = _projectY(context.chartRect, context.bounds, context.options.targetLine.value);
 
-        context.svg.elem('line', {
-            x1: context.chartRect.x1,
-            x2: context.chartRect.x2,
-            y1: targetLineY,
-            y2: targetLineY
-        }, context.options.targetLine.class);
-    });
+            context.svg.elem('line', {
+                x1: context.chartRect.x1,
+                x2: context.chartRect.x2,
+                y1: targetLineY,
+                y2: targetLineY
+            }, context.options.targetLine.class);
+        });
+    }
 }
 
 /*

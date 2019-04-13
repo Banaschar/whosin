@@ -1,4 +1,4 @@
-import * as ApData from './apData';
+import * as Conf from './conf';
 import {statusMessage} from './eventHandler';
 
 var _baseUrl = 'http://graphite-kom.srv.lrz.de/render/?target=';
@@ -10,10 +10,6 @@ var roomData = {};
 var roomDataperAP = {};
 var current = {};
 var _loadingManager;
-
-function initDataHandler(manager) {
-    _loadingManager = manager;
-}
 
 /*
     Parses data and stores in [date,logins] pair list
@@ -104,14 +100,14 @@ function _doRequest(url, ap, timeframe) {
     req.send(null);
 }
 
+function _buildURLrest(ap, timeframe) {
+    return window.location.protocol + '//' + window.location.host +
+            '/getData/' + _buildURL(ap, timeframe); 
+}
+
 function _buildURL(ap, timeframe) {
 
-    return `http://graphite-kom.srv.lrz.de/render/?target=alias(sumSeries(
-                    ap.${ap}.ssid.eduroam, 
-                    ap.${ap}.ssid.lrz, 
-                    ap.${ap}.ssid.mwn-events, 
-                    ap.${ap}.ssid.@BayernWLAN, 
-                    ap.${ap}.ssid.other), %22${ap}%22)&format=csv&from=${timeframe}`;
+    return `http://graphite-kom.srv.lrz.de/render/?target=alias(sumSeries(ap.${ap}.ssid.eduroam, ap.${ap}.ssid.lrz, ap.${ap}.ssid.mwn-events, ap.${ap}.ssid.@BayernWLAN, ap.${ap}.ssid.other), %22${ap}%22)&format=csv&from=${timeframe}`;
 
 }
 
@@ -123,7 +119,8 @@ function _buildURL(ap, timeframe) {
 function getData(aps, timeframe) {
     //_loadingManager.setup('Loading Access Point data...', 'data');
     for (var ap in aps) {
-        var url = _buildURL(ap, timeframe);
+        var url = _buildURLrest(ap, timeframe);
+        console.log(url);
         _doRequest(url, ap, timeframe);
     }
     //_loadingManager.onLoad();
@@ -158,7 +155,7 @@ function getNormalized(time, ap) {
  * per Room average data for each day
  */
 function calcPerRoom(ap) {
-    for (var room of ApData.getApRooms(ap)) {
+    for (var room of Conf.getApRooms(ap)) {
         roomData[room] = avgPerDay(room);
     }
     //console.log(roomData[room]);
@@ -169,7 +166,7 @@ function calcPerRoom(ap) {
  * With value a percentage of total average by room capacity compared to total
  */
 function avgPerDay(room) {
-    var ap = ApData.getRoomAp(room);
+    var ap = Conf.getRoomAp(room);
     var _perc = getRoomPercentage(ap, room);
     var curr = _timeListData[ap]["time"][0];
     var count = 0;
@@ -222,9 +219,9 @@ function avgPerDay(room) {
 
 function getCurrentTotal(type, room) {
     if (type === 'room') {
-        return current[ApData.getRoomAp(room)] * getRoomPercentage(ApData.getRoomAp(room), room);
+        return current[Conf.getRoomAp(room)] * getRoomPercentage(Conf.getRoomAp(room), room);
     } else if (type === 'ap') {
-        return current[ApData.getRoomAp(room)];
+        return current[Conf.getRoomAp(room)];
     }
 }
 
@@ -256,7 +253,7 @@ function cleanData(ap) {
 
     var _roomPerc = {}
     perDay[ap] = {};
-    for (var croom of ApData.getApRooms(ap)) {
+    for (var croom of Conf.getApRooms(ap)) {
         // get normalized room value by cap
         _roomPerc[croom] = getRoomPercentage(ap, croom);
         roomData[croom] = [];
@@ -283,7 +280,7 @@ function cleanData(ap) {
     })
     // Get data per room here, or somewhere else?
     for (var key in _keys) {
-        for (var c of ApData.getApRooms(ap)) {
+        for (var c of Conf.getApRooms(ap)) {
             roomData[croom].append(_roomPerc[c] * perDay[ap][key]);
         }
     }
@@ -292,8 +289,8 @@ function cleanData(ap) {
 
 function getApCapacity(ap) {
     var _sum = 0;
-    for (var i of ApData.getApRooms(ap)) {
-        _sum += ApData.getRoomCapacity(i);
+    for (var i of Conf.getApRooms(ap)) {
+        _sum += Conf.getRoomCapacity(i);
     }
     return _sum;
 }
@@ -303,14 +300,14 @@ function getApCapacity(ap) {
     in percent.
 */
 function getRoomPercentage(ap, room) {
-    return ApData.getRoomCapacity(room) / getApCapacity(ap);
+    return Conf.getRoomCapacity(room) / getApCapacity(ap);
 }
 
 
 function getPerAP(room) {
     var avg = roomDataperAP[room]["max"].reduce(
                 function(a,b) {return a + b}, 0) / roomDataperAP[room]["max"].length;
-    return avg / getApCapacity(ApData.getRoomAp(room));
+    return avg / getApCapacity(Conf.getRoomAp(room));
 }
 
 
@@ -321,7 +318,7 @@ function getPerAP(room) {
     type = 'room' | 'ap' -> data per room or per ap
 */
 function getNormalized(type, value, room) {
-    if (ApData.getRoomCapacity(room) === 0) {
+    if (Conf.getRoomCapacity(room) === 0) {
         return 0;
     }
 
@@ -331,11 +328,11 @@ function getNormalized(type, value, room) {
         // var p = avg * getRoomPercentage(_ap, room);
         //console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
         // Normalize on room capacity
-        return avg / ApData.getRoomCapacity(room);
+        return avg / Conf.getRoomCapacity(room);
     } else if (type === 'ap') {
         var avg = roomDataperAP[room][value].reduce(
                 function(a,b) {return a + b}, 0) / roomDataperAP[room][value].length;
-        return avg / ApData.getRoomCapacity(room);
+        return avg / Conf.getRoomCapacity(room);
     }
 }
 

@@ -281,13 +281,14 @@ body {
 }
 */
 
+/* Graph base colors */
 .ct-series .ct-bar {
-    stroke: red;
+    stroke: #207DFF;
     stroke-width: 20px;
 }
 
 .ct-target-line {
-    stroke: blue;
+    stroke: #cc3300;
     stroke-width: 2px;
     stroke-dasharray: 4px;
 }

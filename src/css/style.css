@@ -32,21 +32,22 @@ body {
     left: 0;
     z-index: -1;
     transition: .5s;
-    width: 75%;
+    width: 70%;
     /*right: 0;*/
     height: 50%;
-    display: inline-block;
+    /*display: inline-block;*/
 }
 
 .webglCanvas2 {
     position: absolute;
     top: 0;
-    left: 75%;
+    /*left: 75%;*/
     z-index: -1;
     transition: .5s;
+    width: 30%;
     right: 0;
     height: 100%;
-    display: inline-block;
+    /*display: inline-block;*/
 }
 
 /* reset our lists to remove bullet points and padding */
@@ -251,6 +252,7 @@ body {
     background: rgba(0, 0, 0, 0.8);
     border-radius: .5em;
     font-size: 12px;
+    font-weight: bold;
     line-height: 1.2;
     transition: opacity .5s;
     /*

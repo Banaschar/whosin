@@ -9,27 +9,30 @@ import {visualUpdate, initColorMap, updateLegend} from './visualization';
 import Stats from '../lib/stats.min';
 import {initDataHandler} from './dataHandler';
 import config from "../config.json";
-import {statusMessage} from './eventHandler.js';
+import {statusMessage, onWindowResize} from './eventHandler.js';
 import {setConfig} from './conf.js';
 
 // TODO: Import all files in the assets directory and load by file name (building name)
-//import ASSETS from '../assets/0501.zip';
+import defaultModel from '../assets/0501.zip';
 
 var stats;
 var container;
 
 function init() {
-    //console.log(ASSETS);
+    var dev = false;
     container = document.createElement('div');
     container.setAttribute('class', 'container');
     document.body.appendChild(container);
+
+    initEventHandler(container);
 
     try {
         console.log(ASSETS);
         var assetList = ASSETS;
     } catch(err) {
         console.log(err);
-        var assetList = ['0500'];
+        var assetList = ['0501'];
+        var dev = true;
     }
     initSideBar(container, assetList);
 
@@ -43,7 +46,9 @@ function init() {
     setConfig(CONFIG);
     initScene(container);
     
-    //loadZip(ASSETS, manager);
+    if (dev) {
+        loadZip(defaultModel);
+    }
     // TODO: Combine sprite and annotation init methods
     initSpriteHandler();
     initAnnotation();
@@ -52,27 +57,24 @@ function init() {
 
     //stats = new Stats();
 
-    container.appendChild(renderer.domElement);
-    container.appendChild(renderer2.domElement);
+    //container.appendChild(renderer.domElement);
+    //container.appendChild(renderer2.domElement);
     //document.body.appendChild(stats.dom);
 
-    initEventHandler(container);
+    
     //console.log(renderer.domElement.clientWidth);
     //console.log(renderer.domElement.clientHeight);
-    //renderer.setSize(renderer.domElement.clientWidth, renderer.domElement.clientHeight);
+    renderer.setSize(renderer.domElement.clientWidth, renderer.domElement.clientHeight);
+    
     renderer2.setSize(renderer2.domElement.clientWidth, renderer2.domElement.clientHeight);
 }
 
-/*
-    TODO: Refactor updateLegend() -> Move to sprite handler or use visualUpdate
-    ---> Better yet, refactor it all into SpriteHandler and rename it to visuals or so
-*/
 function render() {
     requestAnimationFrame(render);
     controls.update();
     controlsOrtho.update();
     //renderer.clear();
-    //console.log(cameraPers.position);
+    console.log(cameraOrtho.position);
     
     /*
     var x = renderer.domElement.offsetLeft;

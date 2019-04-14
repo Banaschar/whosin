@@ -11,7 +11,6 @@ module.exports = {
         filename: 'main.bundle.js',
         path: path.resolve(__dirname, 'appserver/static/scripts')
     },
-    //devtool: 'inline-source-map',
     devtool: 'source-map',
     devServer: {
         contentBase: './appserver/static/scripts' // was ./dist

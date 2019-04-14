@@ -97,10 +97,10 @@ function updateTooltip(thisRoom, visible) {
     } else {
         tooltipSprite.material.opacity = 0.0;
         tooltipSprite.material.needsUpdate = true;
-        //console.log("Tooltip invisible");
     }
 }
 
+/* Limit for the tooltip graph */
 function _projectY(chartRect, bounds, value) {
   return chartRect.y1 - 
     (chartRect.height() * (value - bounds.min) / (bounds.range + bounds.step));
@@ -152,18 +152,16 @@ function _setGraph(room) {
     }
 }
 
-
-function updateAnnotation(pos, room) {
-    pos.x = (1 + pos.x) * window.innerWidth / 2;
-    pos.y = -(pos.y - 3) * window.innerHeight / 2;
+function updateAnnotation(pos, container, room) {
+    pos.x = (1 + pos.x) * renderer.domElement.clientWidth / 2;
+    pos.y = -(pos.y - 1) * renderer.domElement.clientHeight / 2;
     var offsetX;
-    if (pos.x < 0.7 * window.innerWidth) {
-        offsetX = 100;
+    if (pos.x < 0.7 * renderer.domElement.clientWidth) {
+        offsetX = container.offsetLeft;
     } else {
-        offsetX = -100;
+        offsetX = 0;
     }
-    //console.log(pos.x + ', ' + pos.y);
-    _div.style.top = `${pos.y + 15}px`;
+    _div.style.top = `${pos.y + 20}px`;
     _div.style.left = `${pos.x + offsetX}px`;
     _textNode.textContent = room;
 
@@ -174,59 +172,22 @@ function updateAnnotation(pos, room) {
     _div.style.visibility = 'visible';
 }
 
-
-function updateAnnotationPosition(pos) {
-    pos.x = (1 + pos.x) * window.innerWidth / 2;
-    pos.y = -(pos.y - 1) * window.innerHeight / 2;
+function updateAnnotationPosition(pos, container) {
+    pos.x = (1 + pos.x) * renderer.domElement.clientWidth / 2;
+    pos.y = -(pos.y - 1) * renderer.domElement.clientHeight / 2;
     var offsetX;
-    if (pos.x < 0.7 * window.innerWidth) {
-        offsetX = 100;
+    if (pos.x < 0.7 * renderer.domElement.clientWidth) {
+        offsetX = container.offsetLeft;
     } else {
-        offsetX = -100;
+        offsetX = 0;
     }
-    _div.style.top = `${pos.y + 15}px`;
+    _div.style.top = `${pos.y + 20}px`;
     _div.style.left = `${pos.x + offsetX}px`;
 }
-
 
 function hideAnnotation() {
     _div.style.visibility = 'hidden';
 }
-
-/*
-function updateAnnotation(thisRoom, visible) {
-    if (visible) {
-        var pos = new Vector3();
-        pos.subVectors(thisRoom.geometry.boundingBox.max, 
-                        thisRoom.geometry.boundingBox.min);
-        pos.multiplyScalar(0.5);
-        pos.add(thisRoom.geometry.boundingBox.min);
-        
-        cameraPers.updateMatrixWorld();
-        pos.applyMatrix4(thisRoom.matrixWorld);
-
-        cameraPers.updateProjectionMatrix();
-        pos.project(cameraPers);
-        //console.log(pos.x.toString() + ', ' + pos.y.toString());
-        pos.x = (1 + pos.x) * window.innerWidth / 2;
-        pos.y = -(pos.y - 1) * window.innerHeight / 2;
-        //console.log(pos.x + ', ' + pos.y);
-        _div.style.top = `${pos.y}px`;
-        _div.style.left = `${pos.x}px`;
-
-        _textNode.textContent = thisRoom.name;
-
-        if (hasData()) {
-            _graphDiv = _createGraph(thisRoom.name);
-        }
-
-        _div.style.visibility = 'visible';
-    } else {
-        _div.style.visibility = 'hidden';
-    }
-}
-*/
-
 
 function initAnnotation() {
     _div = document.createElement('div');

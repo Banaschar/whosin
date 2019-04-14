@@ -1,6 +1,7 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
 import {Mesh, MeshBasicMaterial, LoadingManager,
-        PlaneGeometry, MeshLambertMaterial} from 'three';
+        PlaneGeometry, MeshLambertMaterial,
+        SpriteMaterial, CanvasTexture, Sprite} from 'three';
 import {scenePers, sceneOrtho} from './sceneHandler';
 import {setEventObjects, getLoadingManager} from './eventHandler';
 import ZipLoader from 'zip-loader';
@@ -146,27 +147,85 @@ function _updateModelDependent() {
     updateAPcolorMap();
 }
 
+function _createRoomTexture() {
+    const _canvas = document.createElement('canvas');
+    const ctx = _canvas.getContext('2d');
+    _canvas.height = 32;
+    _canvas.width = 128;
+
+    ctx.fillStyle = "blue";
+    ctx.fillRect(0, 0, _canvas.width, _canvas.height);
+
+    ctx.fillStyle = 'rgb(255, 255, 255)';
+    ctx.font = '16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('roomblabla', _canvas.width / 2, _canvas.height / 2);
+    var _toolTipTexture = new CanvasTexture(_canvas);
+    var mat = new MeshBasicMaterial({ map: _toolTipTexture});
+    return mat;
+}
+
+function _createRoomSprite(name, posX, posY) {
+    const _canvas = document.createElement('canvas');
+    const ctx = _canvas.getContext('2d');
+    _canvas.height = 64;
+    _canvas.width = 256;
+
+    //ctx.fillStyle = "blue";
+    //ctx.fillRect(0, 0, _canvas.width, _canvas.height);
+
+    //ctx.fillStyle = 'rgb(255, 255, 255)';
+    ctx.fillStyle = '#000000'
+    ctx.font = '32px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name, _canvas.width / 2, _canvas.height / 2);
+    var _toolTipTexture = new CanvasTexture(_canvas);
+    //var mat = new MeshBasicMaterial({ map: _toolTipTexture});
+    var _spriteMat = new SpriteMaterial({map: _toolTipTexture});
+
+    var sp = new Sprite(_spriteMat);
+    sp.position.set(posX, posY, 4);
+    sp.scale.set(32, 8, 1);
+
+    return sp;
+}
+
 function _create2DView() {
-    var material = new MeshBasicMaterial({color: 0xffff00});
+    var material = new MeshBasicMaterial({color: 0x444444});
+    var floorY = 0;
+    var floorX = 0;
     for (var floor in roomList) {
+        floorY = 0;
         for (var room in roomList[floor]) {
             var width = roomList[floor][room].geometry.boundingBox.max.x -
                         roomList[floor][room].geometry.boundingBox.min.x;
             var height = roomList[floor][room].geometry.boundingBox.max.y -
                         roomList[floor][room].geometry.boundingBox.min.y;
 
-            //console.log('Width: ' + width + '. Height: ' + height);
             var geo = new PlaneGeometry(width, height);
             var mesh = new Mesh(geo, material);
             mesh.geometry.scale(2, 2, 1);
-            mesh.translateX(Math.floor(Math.random() * 100));
-            mesh.translateY(Math.floor(Math.random() * 10));
+            mesh.translateX(Math.floor(floorX * 50));
+            mesh.translateY(floorY * 50);
+
+            var sp = _createRoomSprite(room, floorX * 50, floorY * 50 + 20);
+
+            sceneOrtho.add(mesh);
+            sceneOrtho.add(sp);
+            console.log('Mesh pos: ' + mesh.position.z + ', ' + mesh.position.y);
+            console.log('Sprite pos: ' + sp.position.z + ', '+ sp.position.y);
+
             if (!roomList2d.hasOwnProperty(floor)) {
                 roomList2d[floor] = {};
             }
-            sceneOrtho.add(mesh);
+
             roomList2d[floor][room] = mesh;
+
+            floorY += 1;
         }
+        floorX += 1;
     } 
 }
 

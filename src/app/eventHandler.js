@@ -92,23 +92,13 @@ function onWindowResize(container) {
     var width = parseInt(style.width, 10);
     var height = container.clientHeight;
 
-    console.log('Renderer changed: ' + renderer.domElement.clientWidth);
-
-    /*
-    cameraPers.aspect = width / height;
-    cameraPers.updateProjectionMatrix();
-
-    cameraOrtho.left = -width / 2;
-    cameraOrtho.right = width / 2;
-    cameraOrtho.top = height / 2;
-    cameraOrtho.bottom = -height / 2;
-    cameraOrtho.updateProjectionMatrix();
-    */
-
-    renderer.setSize(width, height);
-    //renderer2.setSize(width / 2, height);
-    updateViewports(container);
-    updateCameras();
+    var width3d = width * 0.7;
+    var width2d = width * 0.3
+    
+    renderer.setSize(width3d, renderer.domElement.clientHeight)
+    renderer2.setSize(width2d, height);
+    
+    updateCameras(width3d, width2d);
 }
 
 function initEventHandler(container) {
@@ -122,31 +112,6 @@ function initEventHandler(container) {
     window.addEventListener('resize', function() {
         onWindowResize(container);
     }, false);
-}
-
-/*
- * Called from Geometry.loadGeo
- */
-function createTooltipEvents(geo) {
-    var interaction = new Interaction(renderer, scenePers, cameraPers);
-    for (var floor in geo) {
-        for (var key in geo[floor]) {
-            var thisRoom = geo[floor][key];
-            thisRoom.on('mouseover', (function(thisRoom) {
-                return function() {
-                    updateTooltip(thisRoom, true);
-                    updateAnnotation(thisRoom, true);
-                }
-            })(thisRoom));
-
-            thisRoom.on('mouseout', (function(thisRoom) {
-                return function() {
-                    updateTooltip(null, false);
-                    updateAnnotation(null, false);
-                }
-            })(thisRoom));
-        }
-    }
 }
 
 function setEventObjects(rooms, rooms2d) {
@@ -167,26 +132,15 @@ function setEventObjects(rooms) {
     }
 }
 */
-/*
-function _updateMouse(event, container) {
-    _mouse.x = ((event.clientX - (container.style.left + viewports['3d'].w)) / viewports['3d'].w) * 2 - 1;       
-    _mouse.y = -((event.clientY - container.offsetTop) / viewports['3d'].z) * 2 + 1; 
-    //_mouse2d.x = ((event.clientX - (container.offsetLeft + viewports['2d'].x) / 2 + 0.5) / viewports['2d'].w) * 2 - 1;
-    //_mouse2d.y = -((event.clientY - container.offsetTop + 0.5) / viewports['2d'].z) * 2 + 1;
-    //console.log('1: ' + _mouse.x + ', ' + _mouse.y);
-    _mouse.x = ((event.clientX - container.offsetLeft / 2 + 0.5) / window.innerWidth) * 2 - 1;
-    _mouse.y = -((event.clientY - container.offsetTop + 0.5) / window.innerHeight) * 2 + 1;
-    //console.log('2: ' + _mouse.x + ', ' + _mouse.y);
-}
-*/
 
 function _updateMouse(event, container) {
-    _mouse.x = ((event.clientX - container.offsetLeft / 2 + 0.5) / window.innerWidth) * 2 - 1;
-    _mouse.y = -((event.clientY - container.offsetTop + 0.5) / window.innerHeight) * 2 + 1;
+    var canvasBounds = renderer.context.canvas.getBoundingClientRect();
+    _mouse.x = ((event.clientX - canvasBounds.left) / (canvasBounds.right - canvasBounds.left)) * 2 - 1;
+    _mouse.y = -((event.clientY - canvasBounds.top) / (canvasBounds.bottom - canvasBounds.top)) * 2 + 1;
 }
 
 
-function _checkIntersections() {
+function _checkIntersections(container) {
     _raycaster.setFromCamera(_mouse, cameraPers);
     var intersections = _raycaster.intersectObjects(_rooms);
     /*
@@ -201,18 +155,18 @@ function _checkIntersections() {
         //updateAnnotation(null, false);
         _currHoverObject = null;
     } else if (intersections.length > 0 && intersections[0].object.name !== _currHoverObject) {
-        updateAnnotation(_mouse, intersections[0].object.name);
+        updateAnnotation(_mouse, container, intersections[0].object.name);
         //updateAnnotation(intersections[0].object, true)
         _currHoverObject = intersections[0].object.name;
     } else if (intersections.length > 0 && intersections[0].object.name === _currHoverObject) {
-        updateAnnotationPosition(_mouse);
+        updateAnnotationPosition(_mouse, container);
     }
 }
 
 function _onMouseMove(event, container) {
     if (modelIsLoaded()) {
         _updateMouse(event, container);
-        _checkIntersections();
+        _checkIntersections(container);
     }
 }
 

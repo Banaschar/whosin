@@ -18,7 +18,7 @@ def root():
 def start():
     with open('config.json', 'r') as f:
         conf = f.read().replace('\n', '')
-    #print('Possible paths. Root: {}, instance: {}'.format(app.root_path, app.instance_path))
+    #app.instance_path for gunicorn
     logger.info('Serving...')
     assetList = os.listdir(os.path.join(app.root_path, 'static/assets'))
     return render_template('index.html', config=conf, assets=assetList)

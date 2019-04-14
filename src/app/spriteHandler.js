@@ -133,25 +133,6 @@ function _createGraph(room) {
     }
 }
 
-/*
-function _createGraph(room) {
-    new Chartist.Bar('#annotGraph', {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
-        series: totalAvgPerDay(room)
-    }, {
-        distributeSeries: true
-    });
-}
-*/
-
-function _setGraph(room) {
-    if (_roomGraph.hasOwnProperty(room)) {
-        return _roomGraph[room];
-    } else {
-        return _createGraph(room);
-    }
-}
-
 function updateAnnotation(pos, container, room) {
     pos.x = (1 + pos.x) * renderer.domElement.clientWidth / 2;
     pos.y = -(pos.y - 1) * renderer.domElement.clientHeight / 2;

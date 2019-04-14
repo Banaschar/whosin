@@ -2,6 +2,7 @@ import {WebGLRenderer, PerspectiveCamera, OrthographicCamera,
         Scene, AmbientLight, DirectionalLight,
         Color, Vector4} from 'three';
 import {OrbitControls} from 'three/examples/js/controls/OrbitControls';
+import {getBox2d} from './geometry';
 
 var scenePers, sceneOrtho;
 var _ambientLight, _keyLight, _fillLight, _backLight;
@@ -24,8 +25,6 @@ function initScene(container) {
     _initControls();
     scenePers.add(_ambientLight);
     switchLightning();
-    //setBackground();
-    
 }
 
 function _initLight() {
@@ -59,22 +58,8 @@ function _initRenderer(container) {
     container.appendChild(renderer2.domElement);
 }
 
-/*
-function _initRenderer(container) {
-    var _switchBackground = false;
-    var webglCanvas = document.createElement('canvas');
-    webglCanvas.setAttribute('class', 'webglCanvas');
-    renderer = new WebGLRenderer({alpha: true, canvas: webglCanvas});
-    renderer.setPixelRatio(window.devicePixelRatio);
-    //renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    renderer.setClearColor(0xffffff, 0);
-}
-*/
-
 function updateCameras(width3d, width2d) {
     cameraPers.aspect = width3d / renderer.domElement.clientHeight;
-    //cameraOrtho.aspect = width2d / renderer2.domElement.clientHeight;
     var w = renderer2.domElement.clientWidth;
     var h = renderer2.domElement.clientHeight;
     cameraOrtho.left = w / -2;
@@ -84,26 +69,20 @@ function updateCameras(width3d, width2d) {
 
     cameraPers.updateProjectionMatrix();
     cameraOrtho.updateProjectionMatrix();
+    updateCameraOrtho();
 }
 
-/*
-function updateCameras() {
-    cameraPers.aspect = viewports['3d'].z / viewports['3d'].w;
-    cameraPers.updateProjectionMatrix();
-
-    cameraOrtho.aspect = viewports['2d'].z / viewports['2d'].w
+/* Center orthographic camera on the room group */
+function updateCameraOrtho() {
+    var box = getBox2d();
+    cameraOrtho.zoom = Math.min(renderer2.domElement.clientWidth / (box.max.x - box.min.x),
+                renderer2.domElement.clientHeight / (box.max.y - box.min.y)) * 0.9;
+    
+    box.getCenter(cameraOrtho.position);
     cameraOrtho.updateProjectionMatrix();
 }
-*/
 
 function _initCamera() {
-    /*
-    cameraPers = new PerspectiveCamera(45, 
-        viewports['3d'].z / viewports['3d'].w, 1, 1000);
-    cameraOrtho = new PerspectiveCamera(45,
-        viewports['2d'].z / viewports['2d'].w, 1, 1000);
-    */
-
     cameraPers = new PerspectiveCamera(45, 
         renderer.domElement.clientWidth / renderer.domElement.clientHeight, 1, 1000);
     //cameraOrtho = new PerspectiveCamera(90,
@@ -115,12 +94,8 @@ function _initCamera() {
     //cameraPers.position.set(-154, 54, 70);
     cameraPers.position.set(-121, 68, 76);
     //cameraPers.position.set(-107, 66, 54);
-    //cameraOrtho.position.x = 0;
-    //cameraOrtho.position.z = 50;
-    //cameraOrtho.position.set(0, 100, 0);
-    cameraOrtho.zoom = 2;
-    cameraPers.updateProjectionMatrix();
-    cameraOrtho.updateProjectionMatrix();
+    //cameraPers.updateProjectionMatrix();
+    //cameraOrtho.updateProjectionMatrix();
 }
 
 
@@ -140,9 +115,9 @@ function _initCamera(container) {
 
 function _initControls() {
     controls = new OrbitControls(cameraPers, renderer.domElement);
-    controlsOrtho = new OrbitControls(cameraOrtho, renderer2.domElement);
-    controlsOrtho.enableDamping = true;
-    controlsOrtho.dampingFactor = 0.25;
+    //controlsOrtho = new OrbitControls(cameraOrtho, renderer2.domElement);
+    //controlsOrtho.enableDamping = true;
+    //controlsOrtho.dampingFactor = 0.25;
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;
@@ -180,4 +155,4 @@ function switchLightning() {
 
 export {initScene, renderer, renderer2, controls, cameraPers, 
         cameraOrtho, setBackground, switchLightning, scenePers,
-        controlsOrtho, sceneOrtho, updateCameras};
+        controlsOrtho, sceneOrtho, updateCameras, updateCameraOrtho};

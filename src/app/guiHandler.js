@@ -98,7 +98,7 @@ function createMenu(sidebar, assetList) {
         event.stopPropagation();
     })));
     sub1.appendChild(createDropDown(['None'], ['None'], 'floorDropdown', function() {
-        floorView('room');
+        floorView('room', 'floorDropdown');
     }));
     
     var slider = document.createElement('input');
@@ -150,7 +150,7 @@ function createMenu(sidebar, assetList) {
         viewConcept1('ap', 'max', text);
     })));
     sub2.appendChild(createDropDown(['None'], ['None'], 'floorDropdown2', function() {
-        floorView('ap');
+        floorView('ap', 'floorDropdown2');
     }));
     item3.addEventListener('click', function() {
         if (sub2.classList.contains('active')) {
@@ -167,12 +167,12 @@ function createMenu(sidebar, assetList) {
 
     var item4 = createListEle(createA('#', 'Current total'));
     item4.addEventListener('click', function() {
-        Visualization.displayCurrentGraph('ap', 'Current total', _container);
+        Visualization.displayGraph('current', 'ap', 'Current total');
     })
     menu.appendChild(item4);
     var item5 = createListEle(createA('#', 'Current per room'));
     item5.addEventListener('click', function() {
-        Visualization.displayCurrentGraph('room', 'Current per room', _container);
+        Visualization.displayGraph('current', 'room', 'Current per room');
     })
     menu.appendChild(item5);
     var item6 = createListEle(createA('#', 'Access Points'));
@@ -217,6 +217,19 @@ function initSideBar(container, assetList) {
     createMenu(sidebar, assetList);
     document.body.appendChild(border);
     document.body.appendChild(sidebar);
+
+    var graphContainer = document.createElement('div');
+    graphContainer.setAttribute('class', 'graphContainer');
+    var graph1 = document.createElement('div');
+    var graph2 = document.createElement('div');
+    graph1.setAttribute('class', 'graphMain');
+    graph2.setAttribute('class', 'graphMain');
+    graph1.setAttribute('id', 'graph1');
+    graph2.setAttribute('id', 'graph2');
+    graphContainer.appendChild(graph1);
+    graphContainer.appendChild(graph2);
+
+    container.appendChild(graphContainer);
 }
 
 
@@ -233,16 +246,15 @@ function viewConcept1(type, value, title) {
         Visualization.makeTransparent('all', 0.3);
         Visualization.colorMap(type, value, 'None');
         console.log(_container.style.left);
-        Visualization.displayGraph(type, value, title, _container);
+        Visualization.displayGraph(type, value, title);
         // TODO: Camera angle
-        // TODO: 2D view
     } else {
         EventHandler.statusMessage('Keine Daten verfügbar', 'error');
     }
 }
 
-function floorView(type) {
-    var drop = document.getElementById('floorDropdown');
+function floorView(type, menu) {
+    var drop = document.getElementById(menu);
     var floor = drop.options[drop.selectedIndex].value;
     Visualization.hideFloors(floor);
     if (DataHandler.hasData()) {

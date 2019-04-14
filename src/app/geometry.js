@@ -1,8 +1,8 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
 import {Mesh, MeshBasicMaterial, LoadingManager,
         PlaneGeometry, MeshLambertMaterial,
-        SpriteMaterial, CanvasTexture, Sprite} from 'three';
-import {scenePers, sceneOrtho} from './sceneHandler';
+        SpriteMaterial, CanvasTexture, Sprite, Group, Box3} from 'three';
+import {scenePers, sceneOrtho, updateCameraOrtho} from './sceneHandler';
 import {setEventObjects, getLoadingManager} from './eventHandler';
 import ZipLoader from 'zip-loader';
 import {updateAPcolorMap} from './visualization';
@@ -18,6 +18,7 @@ var transparency = 1.0;
 var _materialList = {};
 var apList = {};
 var _modelLoaded = false;
+var _box2d;
 
 function modelIsLoaded() {
     return _modelLoaded;
@@ -193,29 +194,28 @@ function _createRoomSprite(name, posX, posY) {
 }
 
 function _create2DView() {
+    var group2d = new Group();
     var material = new MeshBasicMaterial({color: 0x444444});
     var floorY = 0;
     var floorX = 0;
     for (var floor in roomList) {
         floorY = 0;
+        group2d.add(_createRoomSprite('Floor ' + floor, floorX * 50, -10));
         for (var room in roomList[floor]) {
-            var width = roomList[floor][room].geometry.boundingBox.max.x -
+            var height = roomList[floor][room].geometry.boundingBox.max.x -
                         roomList[floor][room].geometry.boundingBox.min.x;
-            var height = roomList[floor][room].geometry.boundingBox.max.y -
+            var width = roomList[floor][room].geometry.boundingBox.max.y -
                         roomList[floor][room].geometry.boundingBox.min.y;
 
             var geo = new PlaneGeometry(width, height);
-            var mesh = new Mesh(geo, material);
+            var mesh = new Mesh(geo, material.clone());
             mesh.geometry.scale(2, 2, 1);
-            mesh.translateX(Math.floor(floorX * 50));
-            mesh.translateY(floorY * 50);
+            mesh.translateX(floorX * 50);
+            mesh.translateY(floorY * 30 + height);
 
-            var sp = _createRoomSprite(room, floorX * 50, floorY * 50 + 20);
 
-            sceneOrtho.add(mesh);
-            sceneOrtho.add(sp);
-            console.log('Mesh pos: ' + mesh.position.z + ', ' + mesh.position.y);
-            console.log('Sprite pos: ' + sp.position.z + ', '+ sp.position.y);
+            var sp = _createRoomSprite(room, floorX * 50, floorY * 30 + height);
+            group2d.add(mesh, sp);
 
             if (!roomList2d.hasOwnProperty(floor)) {
                 roomList2d[floor] = {};
@@ -226,7 +226,14 @@ function _create2DView() {
             floorY += 1;
         }
         floorX += 1;
-    } 
+    }
+    sceneOrtho.add(group2d);
+    _box2d = new Box3().setFromObject(group2d);
+    updateCameraOrtho();
+}
+
+function getBox2d() {
+    return _box2d;
 }
 
 /*
@@ -301,4 +308,5 @@ function moveGeometry() {
 }
 
 export {loadModel, hideGeometry, setTransparency, makeTransparent, 
-        roomList, roomListString, apList, moveGeometry, loadZip, modelIsLoaded};
+        roomList, roomList2d, roomListString, apList, moveGeometry,
+        getBox2d, loadZip, modelIsLoaded};

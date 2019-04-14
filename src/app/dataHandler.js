@@ -8,29 +8,8 @@ var _ssid = ['eduroam', 'lrz', 'mwn-events', '@BayernWLAN', 'other'];
 var _timeListData = {};
 var roomData = {};
 var roomDataperAP = {};
-var current = {};
+var _current = {};
 var _loadingManager;
-
-/*
-    Parses data and stores in [date,logins] pair list
-    - Right now only for graph display
-    TODO: Refactor to combine with the implementation in _handleSuccess
-*/
-function _parseData(csv, time, ap) {
-    var timeList = [];
-    var _tmp;
-    for (var i of csv) {
-        _tmp = i.split(",");
-        timeList.push([_tmp[1], (Number(_tmp[_tmp.length - 1]) || 0)]);
-    }
-
-    if (_timeListData.hasOwnProperty(time)) {
-        _timeListData[time][ap] = result;
-    } else {
-        _timeListData[time] = {};
-        _timeListData[time][ap] = timeList;
-    }
-}
 
 function _handleSuccess() {
     //this.callback.apply(this, this.arguments);
@@ -57,24 +36,9 @@ function _handleSuccess() {
             last = Number(_tmp[_tmp.length - 1]) || 0
             _timeListData[ap]["value"].push(last)
         }
-
-
-        //_tmp = (Number(_tmp[_tmp.length - 1]) || 0);
-        //result.push(_tmp);
     }
-    current[ap] = last;
+    _current[ap] = last;
 
-    /*
-    // old single value
-    if (data.hasOwnProperty(time)) {
-        data[time][ap] = result;
-    } else {
-        data[time] = {};
-        data[time][ap] = result;
-    }
-    console.log(data[time][ap]);
-    */
-    //console.log(_timeListData[ap]);
     // Handle data per room
     calcPerRoom(ap);
     statusMessage('All Data loaded', 'status');
@@ -95,7 +59,6 @@ function _doRequest(url, ap, timeframe) {
     req.onload = _handleSuccess;
     req.onerror = _handleError;
     //req.onprogress = _loadingManager.onProgress;
-    //console.log(url);
     req.open("GET", url, true);
     req.send(null);
 }
@@ -119,37 +82,14 @@ function _buildURL(ap, timeframe) {
 function getData(aps, timeframe) {
     //_loadingManager.setup('Loading Access Point data...', 'data');
     for (var ap in aps) {
-        var url = _buildURLrest(ap, timeframe);
+        //var url = _buildURLrest(ap, timeframe);
+        var url = _buildURL(ap, timeframe);
         console.log(url);
         _doRequest(url, ap, timeframe);
     }
     //_loadingManager.onLoad();
     
 }
-
-// Difficult, because I don't have per-room data. Still not enough data points which
-// room belongs to which ap
-/*
-function getNormalizedCapacity(time, ap) {
-    var values
-}
-
-
-function getNormalized(time, ap) {
-    var values = data[time][ap];
-    var avg = values.reduce(function(a,b) {return a + b;}, 0) / values.length;
-    var max = Math.max.apply(null, values);
-    //console.log("Room: " + room + ". AVG: " + avg + ". MAX: " + max);
-    return avg / max;
-    //return values.reduce(function(a,b) {return a + b;}, 0) / Math.max.apply(null, values);
-}
-*/
-
-/*
-    Calculate different values for all rooms. Call async when getting data
-    Store in dict -> [time][room][data_type]
-    data_type: Normalized, average, total, peak etc....
-*/
 
 /*
  * per Room average data for each day
@@ -215,14 +155,6 @@ function avgPerDay(room) {
     resultAp["max"].push(max);
     roomDataperAP[room] = resultAp;
     return result;
-}
-
-function getCurrentTotal(type, room) {
-    if (type === 'room') {
-        return current[Conf.getRoomAp(room)] * getRoomPercentage(Conf.getRoomAp(room), room);
-    } else if (type === 'ap') {
-        return current[Conf.getRoomAp(room)];
-    }
 }
 
 /*
@@ -317,6 +249,7 @@ function getPerAP(room) {
     value = 'max' | 'value'
     type = 'room' | 'ap' -> data per room or per ap
 */
+/*
 function getNormalized(type, value, room) {
     if (Conf.getRoomCapacity(room) === 0) {
         return 0;
@@ -335,6 +268,38 @@ function getNormalized(type, value, room) {
         return avg / Conf.getRoomCapacity(room);
     }
 }
+*/
+function getNormalized(type, value, room) {
+    if (Conf.getRoomCapacity(room) === 0) {
+        return 0;
+    }
+
+    switch(type) {
+        case 'room':
+            var avg = roomData[room][value].reduce(
+                        function(a,b) {return a + b;}, 0) / roomData[room][value].length;
+            return avg / Conf.getRoomCapacity(room);
+            break;
+        case 'ap':
+            var avg = roomDataperAP[room][value].reduce(
+                    function(a,b) {return a + b}, 0) / roomDataperAP[room][value].length;
+            return avg / Conf.getRoomCapacity(room);
+            break;
+        case 'current':
+            if (value === 'room') {
+                return _current[Conf.getRoomAp(room)] * getRoomPercentage(Conf.getRoomAp(room), room);
+            } else if (value === 'ap') {
+                return _current[Conf.getRoomAp(room)];
+            }
+            break;
+
+        case 'default':
+            statusMessage('Wrong Graph type', 'error');
+            console.log('Type: ' + type + ' not valid');
+            break;
+    }
+}
+
 
 function hasData() {
     return Object.keys(roomData).length != 0;

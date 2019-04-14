@@ -1,4 +1,4 @@
-import {apList, roomList, setTransparency, hideGeometry,
+import {apList, roomList, roomList2d, setTransparency, hideGeometry,
         moveGeometry, roomListString} from "./geometry";
 import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color, 
         MeshNormalMaterial, CubeGeometry, CanvasTexture,
@@ -25,7 +25,7 @@ var _lut;
 var _legendSprite;
 var _updateQueue = [];
 var _tmpPillarGeometry = [];
-var _graphDiv;
+//var _graphDiv;
 var _colorList;
 
 /* Predefine list of colors, assigned to access points at runtime */
@@ -128,20 +128,11 @@ function apSphere() {
                 }
             }
 
-        /*
-        makeTransparent('Material8', 0.6);
-        makeTransparent('Material12', 0.6);
-        makeTransparent('Material6', 0.6);
-        makeTransparent('Material3', 0.4);
-        makeTransparent('Material4', 0.4);
-        */
         makeTransparent('all', 0.2);
 
         for (var item of _sphereList) {
             scenePers.add(item);
         }
-        
-
     } else {
 
         makeTransparent('all', 1.0);
@@ -180,19 +171,24 @@ function colorMap(type, value, floor) {
     //_colorMap = !_colorMap;
     _colorMap = true;
 
-    function __applyColor(floor, room) {
+    function __applyColor3d(floor, room, col) {
         roomList[floor][room].material.transparent = false;
-        roomList[floor][room].material.color = new Color(_getColor(type, value, room));
-        //console.log(roomList[floor][room].material);
-        //roomList[floor][room].material.color.setHex(_getColor(room));
+        roomList[floor][room].material.color = col;
         roomList[floor][room].material.needsUpdate = true;
+    }
+
+    function __applyColor2d(floor, room, col) {
+        roomList2d[floor][room].material.color = col;
+        roomList2d[floor][room].material.needsUpdate = true;
     }
 
     if (_colorMap) {
         if (floor === 'None') {
             for (var floorKey in roomList) {
                 for (var roomKey in roomList[floorKey]) {
-                    __applyColor(floorKey, roomKey);
+                    var col = new Color(_getColor(type, value, roomKey));
+                    __applyColor3d(floorKey, roomKey, col);
+                    __applyColor2d(floorKey, roomKey, col);
                 }
             }
 
@@ -204,12 +200,28 @@ function colorMap(type, value, floor) {
 
     } else {
         for (var floor in roomList) {
+            var col = new Color({r: 0.65098, g: 0.709804, b: 0.886275});
             for (var key in roomList[floor]) {
-                roomList[floor][key].material.color = new Color({r: 0.65098, g: 0.709804, b: 0.886275});
+                roomList[floor][key].material.color = col;
                 roomList[floor][key].material.opacity = 0.38;
                 roomList[floor][key].material.transparent = true;
                 roomList[floor][key].material.needsUpdate = true;
+                __applyColor2d(floor, key, col);
             }
+        }
+    }
+}
+
+function _clearColor() {
+    for (var floor in roomList) {
+        var col = new Color({r: 0.65098, g: 0.709804, b: 0.886275});
+        for (var key in roomList[floor]) {
+            roomList[floor][key].material.color = col;
+            roomList[floor][key].material.opacity = 0.38;
+            roomList[floor][key].material.transparent = true;
+            roomList[floor][key].material.needsUpdate = true;
+            roomList2d[floor][room].material.color = col;
+            roomList2d[floor][room].material.needsUpdate = true;
         }
     }
 }
@@ -223,6 +235,9 @@ function pillarMap(type, value, floor) {
 
     _pillarMap = !_pillarMap;
 
+    /* Create lines pointing to the rooms, with the names on the side 
+     * Not working yet :)
+     */
     /*
     var can = document.createElement('canvas');
     can.width = 100;
@@ -232,7 +247,7 @@ function pillarMap(type, value, floor) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.font = 'bold 150px';
-    */
+
 
     function __removeLines() {
         for (var ele of _tmpPillarGeometry) {
@@ -274,6 +289,7 @@ function pillarMap(type, value, floor) {
         scenePers.add(text);
         _tmpPillarGeometry.push(text, line);
     }
+    */
 
     function __createPillar(floor, room, scale) {
         roomList[floor][room].scale.set(1, 1, scale);
@@ -329,39 +345,30 @@ function pillarMap(type, value, floor) {
 
 }
 
-function _createGraphDiv(container) {
-    _graphDiv = document.createElement("div");
-    _graphDiv.setAttribute("id", "barGraph");
-    _graphDiv.classList.add('graph');
-    _graphDiv.style.left = container.style.left;
-    document.body.appendChild(_graphDiv);
-}
-
-
-function displayGraph(type, value, title, container) {
+function displayGraph(type, value, title) {
     if (DataHandler.hasData()) {
-        //_graph = !_graph;
-        
-        if (_graphDiv === undefined) {
-            _graphDiv = document.createElement("div");
-            _graphDiv.setAttribute("id", "barGraph");
-            _graphDiv.classList.add('graph');
-            _graphDiv.style.left = container.style.left;
-            document.body.appendChild(_graphDiv);
-        }
+        var _graphDiv = document.getElementById('graph1');
         _graphDiv.innerHTML = title;
         var _label = [];
         var _values = [];
         for (var room of roomListString) {
             _label.push(room.substring(4, ));
-            _values.push(DataHandler.getNormalized(type, value, room) * 100);
+            if (type === 'current') {
+                _values.push(DataHandler.getNormalized(type, value, room));
+            } else {
+                _values.push(DataHandler.getNormalized(type, value, room) * 100);
+            }
         }
 
-        var chart = new Chartist.Bar('#barGraph', {
+        var chart = new Chartist.Bar('#graph1', {
             labels: _label,
             series: _values
         }, {
-            distributeSeries: true
+            distributeSeries: true,
+            width: '100%',
+            chartPadding: {
+                bottom: 48
+            }
         });
 
         /* Dynamically modify bar colors */
@@ -376,83 +383,8 @@ function displayGraph(type, value, title, container) {
     }
 }
 
-function displayCurrentGraph(type, title, container) {
-    if (DataHandler.hasData()) {
-    //_graph = !_graph;
-    
-        if (_graphDiv === undefined) {
-            _graphDiv = document.createElement("div");
-            _graphDiv.setAttribute("id", "barGraph");
-            _graphDiv.classList.add('graph');
-            _graphDiv.style.left = container.style.left;
-            document.body.appendChild(_graphDiv);
-        }
-
-        _graphDiv.innerHTML = title;
-        var _label = [];
-        var _values = [];
-        for (var room of roomListString) {
-            _label.push(room.substring(4, ));
-            _values.push(DataHandler.getCurrentTotal(type, room));
-        }
-
-        new Chartist.Bar('#barGraph', {
-            labels: _label,
-            series: _values
-        }, {
-            distributeSeries: true
-        });
-    
-    }
-}
-
-
 /*
-function displayGraph() {
-    var graphDiv = document.createElement("div");
-    graphDiv.setAttribute("id", "barGraph");
-    // add in style.css to make globally available and define only once
-    //graphDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;width:400;height:400'
-    graphDiv.classList.add('graph');
-    document.body.appendChild(graphDiv);
-    new Chartist.Bar('#barGraph', {
-        labels: ['Room1', 'Room2'],
-        series: [
-            [10, 20],
-            [3, 12]
-        ]
-    }, {
-        seriesBarDistance: 30
-    });
-}
-*/
-
-/*
-function displayGraph() {
-    _series = [];
-    for (var key in DataHandler.roomData) {
-        _series.append(DataHandler.roomData[key]);
-    }
-    var graphDiv = document.createElement("div");
-    graphDiv.setAttribute("id", "lineGraph");
-    // add in style.css to make globally available and define only once
-    //graphDiv.style.cssText = 'position:fixed;bottom:0;left:0;right:0;width:400;height:400'
-    graphDiv.classList.add('graph');
-    document.body.appendChild(graphDiv);
-    new Chartist.Line('#lineGraph', {
-        labels: DataHandler.hackKeys,
-        series: _series
-    }, {
-        plugins: [
-        Chartist.plugins.legend({
-            legendNames: Object.keys(DataHandler.roomData),
-        })]
-    });
-}
-*/
-
-/*
- * TODO: Change to make all geometry transparent
+ * TODO: wall / all difference. Hardcoded materials of model 1 so far
  */
 function makeTransparent(arg, opac) {
     var _material = [];
@@ -481,5 +413,5 @@ function hideFloors(floor) {
 
 export {colorMap, pillarMap, apSphere, 
         setCurrentFloor, hideFloors, makeTransparent, 
-        displayGraph, initColorMap, updateLegend,
+        displayGraph, initColorMap,
         displayCurrentGraph, updateAPcolorMap}

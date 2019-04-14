@@ -14,17 +14,37 @@ body {
     transition: left .5s;
 }
 
-.webglCanvas {
+.graphContainer {
     position: absolute;
-    top: 0;
+    bottom: 0;
     left: 0;
-    z-index: -1;
+    z-index: 1;
     transition: .5s;
-    width: 100%;
+    width: 70%;
     /*right: 0;*/
-    height: 100%;
-    display: block;
+    height: 50%;
+    background-color: #595959;
+    border-top: 1px solid black;
 }
+
+.graphMain {
+    position: absolute;
+    height: 100%;
+    transition: 0.5s;
+    stroke-width: 60px;
+    text-align: center;
+}
+
+#graph1 {
+    left: 0;
+    width: 50%;
+}
+
+#graph2 {
+    right: 0;
+    width: 50%;
+}
+
 
 .webglCanvas1 {
     position: absolute;
@@ -214,30 +234,6 @@ body {
     backgroun-color: #3e8e41;
 }
 
-.camera3d {
-
-}
-
-.camera2d {
-
-}
-
-/* Graph div */
-#barGraph {
-    stroke-width: 60px;
-}
-
-.graph {
-    position:fixed;
-    bottom:0;
-    left:0;
-    /*right:0;*/
-    /*width:800px;*/
-    text-align: center;
-    width: 50%;
-    height:400px;
-}
-
 /* Floating room annotation */
 .annotation {
     position: absolute;
@@ -247,7 +243,7 @@ body {
     margin-left: 15px;
     margin-top: 15px;
     padding: 1em;
-    width: 200px;
+    width: 250px;
     color: #fff;
     background: rgba(0, 0, 0, 0.8);
     border-radius: .5em;
@@ -255,22 +251,6 @@ body {
     font-weight: bold;
     line-height: 1.2;
     transition: opacity .5s;
-    /*
-    &::before {
-        content: '1';
-        position: absolute;
-        top: -30px;
-        left: -30px;
-        width: 30px;
-        height: 30px;
-        border: 2px solid #fff;
-        border-radius: 50%;
-        font-size: 16px;
-        line-height: 30px;
-        text-align: center;
-        background: rgba(0, 0, 0, 0.8);
-    }
-    */
 }
 
 .ct-label {
@@ -309,8 +289,6 @@ body {
     text-align: center;
     background: rgba(0, 0, 0, 0.8);
 }
-
-
 
 .roomGraph {
     position:absolut;

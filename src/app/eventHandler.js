@@ -124,6 +124,7 @@ function setEventObjects(rooms, rooms2d) {
 }
 
 /*
+// Could be used when adding intersections to the 2D view
 function setEventObjects(rooms) {
     for (var floor of Object.keys(rooms)) {
         for (var room of Object.keys(rooms[floor])) {
@@ -139,7 +140,10 @@ function _updateMouse(event, container) {
     _mouse.y = -((event.clientY - canvasBounds.top) / (canvasBounds.bottom - canvasBounds.top)) * 2 + 1;
 }
 
-
+/*
+ * Handles mouse intersactions with rooms
+ * TODO: Add intersections for the 2D plan and display tooltip graph there
+ */
 function _checkIntersections(container) {
     _raycaster.setFromCamera(_mouse, cameraPers);
     var intersections = _raycaster.intersectObjects(_rooms);

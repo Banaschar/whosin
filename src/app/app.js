@@ -1,11 +1,11 @@
 import {initScene, controls, renderer, 
         scenePers, sceneOrtho, cameraOrtho, cameraPers,
-        viewports, controlsOrtho, renderer2} from './sceneHandler';
+        viewports, renderer2} from './sceneHandler';
 import {loadModel, loadZip} from './geometry';
 import {initSpriteHandler, initAnnotation} from './spriteHandler';
 import {initEventHandler} from './eventHandler';
 import {initGui, initSideBar} from './guiHandler';
-import {visualUpdate, initColorMap, updateLegend} from './visualization';
+import {visualUpdate, initColorMap} from './visualization';
 import Stats from '../lib/stats.min';
 import {initDataHandler} from './dataHandler';
 import config from "../config.json";
@@ -72,49 +72,12 @@ function init() {
 function render() {
     requestAnimationFrame(render);
     controls.update();
-    controlsOrtho.update();
-    //renderer.clear();
-    console.log(cameraOrtho.position);
     
-    /*
-    var x = renderer.domElement.offsetLeft;
-    var y = renderer.domElement.offsetTop;
-    var width = (window.innerWidth - x) / 2;
-    var height = (window.innerHeight - y) / 2;
-    */
-
-    /*
-    renderer.setViewport(x, y, width, height);
-    renderer.setScissor(x, y, width, height);
-    renderer.setScissorTest( true );
-    renderer.render(scenePers, cameraPers);
-
-    renderer.setViewport(width, y, window.innerWidth - width, window.innerHeight);
-    renderer.setScissor(width, y, window.innerWidth - width, window.innerHeight);
-    renderer.setScissorTest( true );
-    renderer.render(sceneOrtho, cameraOrtho);
-    */
-    
-    /*
-    renderer.setViewport(viewports['3d'].x, viewports['3d'].y, viewports['3d'].z, viewports['3d'].w);
-    renderer.setScissor(viewports['3d'].x, viewports['3d'].y, viewports['3d'].z, viewports['3d'].w);
-    renderer.setScissorTest( true );
-    renderer.render(scenePers, cameraPers);
-
-    
-    //renderer.clearDepth();
-    renderer.setViewport(viewports['2d'].x, viewports['2d'].y, viewports['2d'].z, viewports['2d'].w);
-    renderer.setScissor(viewports['2d'].x, viewports['2d'].y, viewports['2d'].z, viewports['2d'].w);
-    renderer.setScissorTest( true );
-    renderer.render(sceneOrtho, cameraOrtho);
-    */
     renderer.render(scenePers, cameraPers);
     renderer2.render(sceneOrtho, cameraOrtho);
     
     
     //stats.update();
-    //visualUpdate();
-    //updateLegend();
 }
 
 export {init, render};

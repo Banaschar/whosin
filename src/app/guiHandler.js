@@ -51,27 +51,18 @@ function createDropDown(optionsText, optionsValues, id, changeFunction) {
 
 /* 
  * Create Menu
- * TODO: Make sure all elements are li items
+ * Add additional buttons / submenus here
  */
 function createMenu(sidebar, assetList) {
     var menu = document.createElement('ul');
     menu.setAttribute('class', 'mainmenu');
     
-    //menu.appendChild(createListEle(createA('#', 'Visual')));
-
-    /* Time Select Elements */
-    //var b = document.createElement('b');
-    //b.innerHTML = 'Time: ';
-    //menu.appendChild(b);
     menu.appendChild(createListEle(createDropDown(['Choose Time', '24h', 'Month', '6 Months', '12 Months'], 
         ['None', '-24h', '-1month', '-6months', '-12months'], 'timeSelect', getAPData)));
-    //var loadM = document.createElement('b');
-    //loadM.innerHTML = 'Model: ';
-    //menu.appendChild(loadM);
     assetList.unshift('Choose Model');
     menu.appendChild(createListEle(createDropDown(assetList, assetList, 'modelSelect', getModel)));
 
-    /* Menu items */
+    /* SUB MENU 1 CREATION */
     var item2 = createListEle(createA('#', '&#9658 Data per Room'));
     var sub1 = document.createElement('ul');
     sub1.setAttribute('class', 'submenu');
@@ -83,7 +74,7 @@ function createMenu(sidebar, assetList) {
         var text = 'Average Room usage in percent of room capacity';
         viewConcept1('roomCap', 'value', text);
     })));
-    sub1.appendChild(createListEle(createButton('Avg. max. per Day', false, function(){
+    sub1.appendChild(createListEle(createButton('Avg. max. per Day', false, function(event){
         if (!event) {
             event = window.event;
         }
@@ -91,11 +82,11 @@ function createMenu(sidebar, assetList) {
         var text = 'Average Max. Room usage in percent of room capacity';
         viewConcept1('roomCap', 'max', text);
     })));
-    sub1.appendChild(createDropDown(['None'], ['None'], 'floorDropdown', function() {
+    sub1.appendChild(createDropDown(['None'], ['None'], 'floorDropdown', function(event) {
         floorView('roomCap', 'floorDropdown');
     }));
 
-    item2.addEventListener('click', function() {
+    item2.addEventListener('click', function(event) {
         if (sub1.classList.contains('active')) {
             sub1.classList.remove('active');
             sub1.style.maxHeight = '0';
@@ -108,6 +99,7 @@ function createMenu(sidebar, assetList) {
     item2.appendChild(sub1);
     menu.appendChild(item2);
 
+    /* SUB MENU 2 CREATION */
     var item3 = createListEle(createA('#', '&#9658 Data per AP'));
     var sub2 = document.createElement('ul');
     sub2.setAttribute('class', 'submenu');
@@ -119,7 +111,7 @@ function createMenu(sidebar, assetList) {
         var text = 'Average Room usage in percent of Access Point capacity';
         viewConcept1('total', 'value', text);
     })));
-    sub2.appendChild(createListEle(createButton('Avg. max. per Day', false, function(){
+    sub2.appendChild(createListEle(createButton('Avg. max. per Day', false, function(event){
         if (!event) {
             event = window.event;
         }
@@ -127,10 +119,10 @@ function createMenu(sidebar, assetList) {
         var text = 'Average Max. Room usage in percent of Access Point capacity';
         viewConcept1('total', 'max', text);
     })));
-    sub2.appendChild(createDropDown(['None'], ['None'], 'floorDropdown2', function() {
+    sub2.appendChild(createDropDown(['None'], ['None'], 'floorDropdown2', function(event) {
         floorView('total', 'floorDropdown2');
     }));
-    item3.addEventListener('click', function() {
+    item3.addEventListener('click', function(event) {
         if (sub2.classList.contains('active')) {
             sub2.classList.remove('active');
             sub2.style.maxHeight = '0';
@@ -143,13 +135,16 @@ function createMenu(sidebar, assetList) {
     item3.appendChild(sub2);
     menu.appendChild(item3);
 
+    /* ---------- END SUBMENU CREATION -----------*/
+
+    /* Additional menu elements */
     var item4 = createListEle(createA('#', 'Current total'));
-    item4.addEventListener('click', function() {
+    item4.addEventListener('click', function(event) {
         Visualization.displayGraph('room', 'current', 'total', 'Current absolut connections, total per AP', 'graph2');
     })
     menu.appendChild(item4);
     var item5 = createListEle(createA('#', 'Current per room'));
-    item5.addEventListener('click', function() {
+    item5.addEventListener('click', function(event) {
         Visualization.displayGraph('room', 'current', 'roomCap', 'Current absolut connections as fraction of capacity', 'graph2');
     })
     menu.appendChild(item5);
@@ -179,10 +174,13 @@ function createMenu(sidebar, assetList) {
     slider.addEventListener('change', changeTransparency);
     menu.appendChild(slider);
 
+    /* Add created menus to sidebar */
     sidebar.appendChild(menu);
-
 }
 
+/*
+ * Initialize sidebar and graph container
+ */ 
 function initSideBar(container, assetList) {
     // border
     _container = container;
@@ -193,7 +191,7 @@ function initSideBar(container, assetList) {
     var sidebar = document.createElement('div');
     sidebar.setAttribute('id', 'sidebarMenu');
     sidebar.setAttribute('class', 'sidebar');
-    document.body.appendChild(createButton('☰ Menu', 'menuBtn', function() {
+    document.body.appendChild(createButton('☰ Menu', 'menuBtn', function(event) {
         if (sidebar.style.width === '200px') {
             sidebar.style.width = '0px';
             container.style.left = '0px';
@@ -226,9 +224,13 @@ function initSideBar(container, assetList) {
 }
 
 
-/* Visualization Concepts
+/*-----------------------------------*/ 
+ /*
+ * Visualization Concepts
  * Map to menu buttons
  */
+/*-----------------------------------*/
+
 var state = {
     'concept1': false,
     'floors': false,
@@ -240,6 +242,10 @@ function getCurrentState() {
     return state;
 }
 
+/* 
+ * Used example view concept:
+ * Displays colormap and graph based on total AP data or room capacity dependant data
+ */
 function viewConcept1(dataType, valueType, title) {
     if (DataHandler.hasData()) {
         Visualization.makeTransparent('all', 0.3);
@@ -250,7 +256,6 @@ function viewConcept1(dataType, valueType, title) {
             max = ' max.';
         } else { max = ''; }
         Visualization.displayGraph('ap', null, valueType, 'Avg.' + max + ' AP utilization in percent of supported capacity', 'graph2');
-        // TODO: Camera angle
         state.dataType = dataType;
         state.valueType = valueType;
     } else {
@@ -264,7 +269,6 @@ function floorView(dataType, menu) {
     Visualization.hideFloors(floor);
     if (DataHandler.hasData()) {
         Visualization.pillarMap(dataType, 'max', floor);
-        // TODO: camera angle
     } else {
         EventHandler.statusMessage('No data available', 'error');
     }

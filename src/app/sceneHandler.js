@@ -12,7 +12,6 @@ var renderer2;
 var _switchBackground = false;
 var cameraPers, cameraOrtho;
 var controls;
-var controlsOrtho;
 
 function initScene(container) {
     scenePers = new Scene();
@@ -135,5 +134,5 @@ function switchLightning() {
 }
 
 export {initScene, renderer, renderer2, controls, cameraPers, 
-        cameraOrtho, setBackground, switchLightning, scenePers,
-        controlsOrtho, sceneOrtho, updateCameras, updateCameraOrtho};
+        cameraOrtho, switchLightning, scenePers,
+        sceneOrtho, updateCameras, updateCameraOrtho};

@@ -1,9 +1,8 @@
 import {Vector2, Vector3, Color, LoadingManager, Raycaster} from "three";
-import {cameraPers, cameraOrtho, renderer, renderer2, scenePers,
-        updateCameras, updateViewports, viewports} from "./sceneHandler";
+import {cameraPers, cameraOrtho, renderer, renderer2,
+        updateCameras} from "./sceneHandler";
 import {rooms, modelIsLoaded} from "./geometry";
-import {Interaction} from 'three.interaction';
-import {updateTooltip, updateAnnotation, hideAnnotation, 
+import {updateAnnotation, hideAnnotation, 
         updateAnnotationPosition} from "./spriteHandler";
 
 var _mouse;
@@ -174,5 +173,4 @@ function _onMouseMove(event, container) {
     }
 }
 
-export {initEventHandler, createTooltipEvents,
-        setEventObjects, onWindowResize, statusMessage, getLoadingManager};
+export {initEventHandler, setEventObjects, onWindowResize, statusMessage, getLoadingManager};

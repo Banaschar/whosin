@@ -7,99 +7,10 @@ import * as Chartist from "chartist";
 import "../css/chartist.min.css";
 import "../css/style.css";
 
-var tooltipSprite;
 var div;
 var _div;
 var _textNode;
-var _roomGraph = {};
 var _graphDiv;
-
-function initSpriteHandler() {
-    // init text box
-    div = document.createElement('div');
-
-    // init sprite
-    const _canvas = document.createElement('canvas');
-    const ctx = _canvas.getContext('2d');
-    const x = 32; //32
-    const y = 32; //32
-    const radius = 30; //30
-    const startAngle = 0;
-    const endAngle = Math.PI * 2;
-
-    // Set canvas size
-    _canvas.height = 64;
-    _canvas.width = 64;
-    ctx.fillStyle = 'rgb(0, 0, 0)';
-    ctx.beginPath();
-    ctx.arc(x, y, radius, startAngle, endAngle);
-    ctx.fill();
-
-    ctx.strokeStyle = 'rgb(255, 255, 255)';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, startAngle, endAngle);
-    ctx.stroke();
-
-    ctx.fillStyle = 'rgb(255, 255, 255)';
-    ctx.font = '32px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('1', x, y);
-
-    var _toolTipTexture = new CanvasTexture(_canvas);
-    var _toolTipMaterial = new SpriteMaterial({
-        map: _toolTipTexture,
-        alphaTest: 0.5,
-        transparent: true,
-        depthTest: false,
-        depthWrite: false
-    });
-
-    tooltipSprite = new Sprite(_toolTipMaterial);
-
-    tooltipSprite.position.set(250, 250, 250);
-    tooltipSprite.scale.set(5, 5, 5);
-
-    scenePers.add(tooltipSprite);
-}
-
-// TODO: Combine with updateAnnotation (so I don't compute the location twice)
-function updateTooltip(thisRoom, visible) {
-    if (visible) {
-        tooltipSprite.material.opacity = 1.0;
-        var pos = new Vector3();
-        pos.subVectors(thisRoom.geometry.boundingBox.max, 
-                        thisRoom.geometry.boundingBox.min);
-        pos.multiplyScalar(0.5);
-        pos.add(thisRoom.geometry.boundingBox.min);
-        cameraPers.updateMatrixWorld();
-        pos.applyMatrix4(thisRoom.matrixWorld);
-        tooltipSprite.position.set(pos.x, pos.y, pos.z);
-        /*
-        var x = thisRoom.geometry.boundingBox.max.x;
-        var y = thisRoom.geometry.boundingBox.max.y;
-        var z = thisRoom.geometry.boundingBox.max.z;
-        tooltipSprite.position.set(x, z, y);
-        */
-        tooltipSprite.material.needsUpdate = true;
-
-        // add text css
-        /*
-        pos.project(cameraPers);
-        pos.x = Math.round((0.5 + vector.x / 2) * 
-                    (renderer.domElement.width / window.devicePixelRatio));
-        pos.y = Math.round((0.5 - vector.y / 2) * 
-                    (renderer.domElement.height / window.devicePixelRatio));
-
-        div.innerHTML = thisRoom.name;
-        */
-
-    } else {
-        tooltipSprite.material.opacity = 0.0;
-        tooltipSprite.material.needsUpdate = true;
-    }
-}
 
 /* Limit for the tooltip graph */
 function _projectY(chartRect, bounds, value) {
@@ -190,5 +101,4 @@ function initAnnotation() {
     _div.appendChild(_graphDiv);  
 }
 
-export {tooltipSprite, initSpriteHandler, initAnnotation,
-        hideAnnotation, updateAnnotationPosition, updateAnnotation};
+export {initAnnotation, hideAnnotation, updateAnnotationPosition, updateAnnotation};

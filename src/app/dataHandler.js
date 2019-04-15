@@ -2,11 +2,9 @@ import * as Conf from './conf';
 import {statusMessage, getLoadingManager} from './eventHandler';
 
 var _baseUrl = 'http://graphite-kom.srv.lrz.de/render/?target=';
-var data = {};
 var _ssid = ['eduroam', 'lrz', 'mwn-events', '@BayernWLAN', 'other'];
-// TODO: Combine with data
+
 var _timeListData = {};
-var roomDataperAP = {};
 var avgPerDay = {};
 var _current = {};
 var _loadingManager;
@@ -66,16 +64,6 @@ function _doRequest(url, ap, timeframe) {
     _requestTracker[ap] = 0;
     req.arguments = Array.prototype.slice.call(arguments, 1);
     req.onload = _handleSuccess;
-/*
-    function() {
-            console.log('Rdy: ' + req.readyState + '. Status: ' + req.status);
-            if (req.status === 200) {
-                _handleSuccess();
-            } else {
-                _handleError(req.status);
-            }
-        };
-        */
     req.onerror = _handleError;
     req.onprogress = function(evt) {
         _requestTracker[ap] = evt.loaded / evt.total * 100;
@@ -262,5 +250,5 @@ function hasData() {
     return Object.keys(avgPerDay).length != 0;
 }
 
-export {data, getData, getRoomData, getAPdata, setDevMode,
-        getCurrentTotal, totalAvgPerDay, hasData, initDataHandler};
+export {getData, getRoomData, getAPdata, setDevMode,
+        totalAvgPerDay, hasData};

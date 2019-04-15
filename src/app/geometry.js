@@ -1,5 +1,5 @@
 import {ColladaLoader} from 'three/examples/js/loaders/ColladaLoader';
-import {Mesh, MeshBasicMaterial, LoadingManager,
+import {Mesh, MeshBasicMaterial,
         PlaneGeometry, MeshLambertMaterial,
         SpriteMaterial, CanvasTexture, Sprite, Group, Box3} from 'three';
 import {scenePers, sceneOrtho, updateCameraOrtho} from './sceneHandler';
@@ -14,7 +14,6 @@ var roomListString = [];
 var _nodes = {};
 var _hidden = false;
 var _hideList;
-var transparency = 1.0;
 var _materialList = {};
 var apList = {};
 var _modelLoaded = false;
@@ -23,17 +22,6 @@ var _box2d;
 function modelIsLoaded() {
     return _modelLoaded;
 }
-
-/*
-// Dynamic textures to print room number on the top of room cube
-function _modifyTextures() {
-    var dynTexture = new DynamicTexture(256, 256);
-    //var mat = new MeshBasicMaterial({map: dynTexture.texture});
-    roomList['4']['4170A'].material.map = dynTexture;
-    dynTexture.drawText("4170A", 32, 256, 'black');
-    roomList['4']['4170A'].material.needsUpdate = true;
-}
-*/
 
 /*
     Load the zipped assets
@@ -52,7 +40,7 @@ function loadZip(path) {
             return reg.test(ele);
         });
         manager.onLoad();
-        loadModel(loader, manager);
+        _loadModel(loader, manager);
         
     });
 
@@ -62,7 +50,7 @@ function loadZip(path) {
 /*
  * Parse the model from the extracted blobs
  */
-function loadModel(zipLoader, manager) {
+function _loadModel(zipLoader, manager) {
     manager.setup('Loading Building...', 'model');
     manager.setURLModifier(function(url) {
         var reg = /\.dae$/;
@@ -141,6 +129,7 @@ function _loadNodes(model) {
     }
 }
 
+/* Update everything that depends on the model */
 function _updateModelDependent() {
     _create2DView();
     setEventObjects(roomList, roomList2d);
@@ -174,6 +163,9 @@ function _createRoomSprite(name, posX, posY) {
     return sp;
 }
 
+/* Create basic 2D layout for the second renderer
+ * TODO: Get edge coordinates and create exact floor layout
+ */
 function _create2DView() {
     var group2d = new Group();
     var material = new MeshBasicMaterial({color: 0x444444});
@@ -288,6 +280,6 @@ function moveGeometry() {
     }
 }
 
-export {loadModel, hideGeometry, setTransparency, makeTransparent, 
+export {hideGeometry, setTransparency, 
         roomList, roomList2d, roomListString, apList, moveGeometry,
         getBox2d, loadZip, modelIsLoaded};

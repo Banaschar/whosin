@@ -2,7 +2,7 @@ import {initScene, controls, renderer,
         scenePers, sceneOrtho, cameraOrtho, cameraPers,
         viewports, renderer2} from './sceneHandler';
 import {loadModel, loadZip} from './geometry';
-import {initSpriteHandler, initAnnotation} from './spriteHandler';
+import {initAnnotation} from './spriteHandler';
 import {initEventHandler} from './eventHandler';
 import {initGui, initSideBar} from './guiHandler';
 import {visualUpdate, initColorMap} from './visualization';
@@ -55,14 +55,14 @@ function init() {
         loadZip(defaultModel);
         setDevMode();
     }
-    // TODO: Combine sprite and annotation init methods
-    //initSpriteHandler();
+    
     initAnnotation();
-
     initColorMap(container);
-
-    //stats = new Stats();
-    //document.body.appendChild(stats.dom);
+    dev = false;
+    if (dev) {
+        stats = new Stats();
+        document.body.appendChild(stats.dom);
+    }
 
     renderer.setSize(renderer.domElement.clientWidth, renderer.domElement.clientHeight);
     renderer2.setSize(renderer2.domElement.clientWidth, renderer2.domElement.clientHeight);
@@ -75,7 +75,9 @@ function render() {
     renderer.render(scenePers, cameraPers);
     renderer2.render(sceneOrtho, cameraOrtho);
     
-    //stats.update();
+    if (stats) {
+        stats.update();
+    }
 }
 
 export {init, render};

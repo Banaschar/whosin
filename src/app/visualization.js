@@ -1,5 +1,5 @@
 import {apList, roomList, roomList2d, setTransparency, hideGeometry,
-        moveGeometry, roomListString} from "./geometry";
+        roomListString} from "./geometry";
 import {SphereGeometry, MeshBasicMaterial, Mesh, Vector3, Color, 
         MeshNormalMaterial, CubeGeometry, CanvasTexture,
         SpriteMaterial, Sprite, Geometry, Line, LineBasicMaterial,
@@ -12,7 +12,6 @@ import * as DataHandler from './dataHandler';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
 import "../css/style.css";
-import {Lut} from 'three/examples/js/math/Lut';
 
 var _colorMap = false;
 var _pillarMap = false;
@@ -460,6 +459,6 @@ function hideFloors(floor) {
 }
 
 export {colorMap, pillarMap, apSphere, 
-        setCurrentFloor, hideFloors, makeTransparent, 
+        hideFloors, makeTransparent, 
         displayGraph, initColorMap,
-        displayCurrentGraph, updateAPcolorMap, clearAll}
+        updateAPcolorMap, clearAll}

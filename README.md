@@ -1,15 +1,20 @@
 # whosin
-Who's in Studio Tracking
+Who's in - Studio Tracking
 
 # Install
 
-1. For latest build
+## For latest build
+```bash
 npm install
 npm run build
-
-2. Using current build
+```
+## Using current build in repo
+```bash
 pip3 install -r requirements.txt
 sudo apt-get install gunicorn // Optional, for faster production server
-
-Adjust setting in serverConfig.py
-run deploy.py
+```
+\
+Adjust settings like address/port in serverConfig.py and run:
+```bash
+python3 deploy.py
+```

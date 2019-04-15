@@ -6,10 +6,11 @@ var data = {};
 var _ssid = ['eduroam', 'lrz', 'mwn-events', '@BayernWLAN', 'other'];
 // TODO: Combine with data
 var _timeListData = {};
-var roomData = {};
 var roomDataperAP = {};
+var avgPerDay = {};
 var _current = {};
 var _loadingManager;
+var _numRequests;
 
 function _handleSuccess() {
     //this.callback.apply(this, this.arguments);
@@ -39,9 +40,13 @@ function _handleSuccess() {
     }
     _current[ap] = last;
 
-    // Handle data per room
-    calcPerRoom(ap);
-    statusMessage('All Data loaded', 'status');
+    // calc Data per day
+    calcAvgPerDay(ap);
+    --_numRequests;
+    console.log(_numRequests);
+    if (_numRequests === 0) {
+        statusMessage('All Data loaded', 'status');
+    }
 }
 
 function _handleError() {
@@ -81,44 +86,25 @@ function _buildURL(ap, timeframe) {
  */
 function getData(aps, timeframe) {
     //_loadingManager.setup('Loading Access Point data...', 'data');
+    _numRequests = Object.keys(aps).length;
     for (var ap in aps) {
         //var url = _buildURLrest(ap, timeframe);
         var url = _buildURL(ap, timeframe);
         console.log(url);
         _doRequest(url, ap, timeframe);
     }
-    //_loadingManager.onLoad();
-    
 }
 
 /*
- * per Room average data for each day
+ * Calculate average loads per day for each AP
  */
-function calcPerRoom(ap) {
-    for (var room of Conf.getApRooms(ap)) {
-        roomData[room] = avgPerDay(room);
-    }
-    //console.log(roomData[room]);
-}
-
-/*
- * Calculates the list of the average loads per day
- * With value a percentage of total average by room capacity compared to total
- */
-function avgPerDay(room) {
-    var ap = Conf.getRoomAp(room);
-    var _perc = getRoomPercentage(ap, room);
+function calcAvgPerDay(ap) {
     var curr = _timeListData[ap]["time"][0];
     var count = 0;
     var index = 0;
     var stepCount = 0;
     var max = 0;
     var resultAp = {
-        "time": [],
-        "value": [],
-        "max": [],
-    };
-    var result = {
         "time": [],
         "value": [],
         "max": [],
@@ -135,9 +121,6 @@ function avgPerDay(room) {
             resultAp["time"].push(curr);
             resultAp["value"].push(count);
             resultAp["max"].push(max);
-            result["time"].push(curr);
-            result["value"].push(count * _perc);
-            result["max"].push(max * _perc);
             count = _timeListData[ap]["value"][index];
             max = count;
             curr = day;
@@ -146,26 +129,24 @@ function avgPerDay(room) {
         index += 1;
     }
     // last day
-    result["time"].push(curr);
-    result["value"].push((count / stepCount) * _perc);
-    result["max"].push(max * _perc);
-
     resultAp["time"].push(curr);
     resultAp["value"].push(count / stepCount);
     resultAp["max"].push(max);
-    roomDataperAP[room] = resultAp;
-    return result;
+    avgPerDay[ap] = resultAp;
 }
 
 /*
  * Return the total average value for each day in the week as a list
+ * As a percentage of the room capacity
 */
 function totalAvgPerDay(room) {
+    var ap = Conf.getRoomAp(room);
+    var perc = getRoomPercentage(room);
     var res = [0, 0, 0, 0, 0];
     var res_avg = [0, 0, 0, 0, 0];
     var index = 0;
-    for (var day of roomData[room]["time"]) {
-        res[day.getDay() - 1] += roomData[room]["max"][index];
+    for (var day of avgPerDay[ap]["time"]) {
+        res[day.getDay() - 1] += avgPerDay[ap]["max"][index] * perc;
         res_avg[day.getDay() - 1] += 1;
         index += 1;
     }
@@ -175,48 +156,6 @@ function totalAvgPerDay(room) {
     }
 
     return res;
-}
-
-function cleanData(ap) {
-    var _curr = _timeListData[ap][0][0].split(" ")[0];
-    var _sum = 0;
-    var _points = 0;
-    var _max = 0;
-
-    var _roomPerc = {}
-    perDay[ap] = {};
-    for (var croom of Conf.getApRooms(ap)) {
-        // get normalized room value by cap
-        _roomPerc[croom] = getRoomPercentage(ap, croom);
-        roomData[croom] = [];
-    }
-
-    for (var a of _timeListData[ap]) {
-        if (a[0].split(" ")[0] === _curr) {
-            _sum += a[1];
-            _points += 1;
-            _max = max(_max, a[1]);
-        }
-        else {
-            //perDay[ap][_curr] = [_sum / points, _max];
-            perDay[ap][_curr] = _sum / points;
-            _sum = 0;
-            _points = 0;
-            _max = 0;
-            _curr = a[0].split(" ")[0]
-        }
-    }
-
-    hackKeys = Object.keys(perDay[ap]).sort(function(a ,b) {
-        return Date.parse(a) > Date.parse(b);
-    })
-    // Get data per room here, or somewhere else?
-    for (var key in _keys) {
-        for (var c of Conf.getApRooms(ap)) {
-            roomData[croom].append(_roomPerc[c] * perDay[ap][key]);
-        }
-    }
-    
 }
 
 function getApCapacity(ap) {
@@ -231,79 +170,60 @@ function getApCapacity(ap) {
     Returns the capacity in regards to the total capacity of the ap
     in percent.
 */
-function getRoomPercentage(ap, room) {
-    return Conf.getRoomCapacity(room) / getApCapacity(ap);
+function getRoomPercentage(room) {
+    return Conf.getRoomCapacity(room) / getApCapacity(Conf.getRoomAp(room));
 }
 
 
 function getPerAP(room) {
-    var avg = roomDataperAP[room]["max"].reduce(
-                function(a,b) {return a + b}, 0) / roomDataperAP[room]["max"].length;
+    var avg = avgPerDay[Conf.getRoomAp(room)]["max"].reduce(
+                function(a,b) {return a + b}, 0) / avgPerDay[Conf.getRoomAp(room)]["max"].length;
     return avg / getApCapacity(Conf.getRoomAp(room));
 }
 
-
-
-/*
-    Get normalized value of percentage of average logins for specified room
-    value = 'max' | 'value'
-    type = 'room' | 'ap' -> data per room or per ap
-*/
-/*
-function getNormalized(type, value, room) {
+/*  
+ * Get normalized data per room
+ */
+function getRoomData(room, dataType, valueType) {
     if (Conf.getRoomCapacity(room) === 0) {
         return 0;
     }
+    var ap = Conf.getRoomAp(room);
 
-    if (type === 'room') {
-        var avg = roomData[room][value].reduce(
-                    function(a,b) {return a + b;}, 0) / roomData[room][value].length;
-        // var p = avg * getRoomPercentage(_ap, room);
-        //console.log('Room: ' + room + '. Average: ' + avg + '. Room part: ' + p);
-        // Normalize on room capacity
-        return avg / Conf.getRoomCapacity(room);
-    } else if (type === 'ap') {
-        var avg = roomDataperAP[room][value].reduce(
-                function(a,b) {return a + b}, 0) / roomDataperAP[room][value].length;
-        return avg / Conf.getRoomCapacity(room);
-    }
-}
-*/
-function getNormalized(type, value, room) {
-    if (Conf.getRoomCapacity(room) === 0) {
-        return 0;
-    }
-
-    switch(type) {
-        case 'room':
-            var avg = roomData[room][value].reduce(
-                        function(a,b) {return a + b;}, 0) / roomData[room][value].length;
+    switch(dataType) {
+        case 'roomCap':
+            var avg = (getRoomPercentage(room) * avgPerDay[ap][valueType].reduce(
+                        function(a,b) {return a + b;}, 0)) / avgPerDay[ap][valueType].length;
             return avg / Conf.getRoomCapacity(room);
             break;
-        case 'ap':
-            var avg = roomDataperAP[room][value].reduce(
-                    function(a,b) {return a + b}, 0) / roomDataperAP[room][value].length;
+        case 'total':
+            var avg = avgPerDay[ap][valueType].reduce(
+                    function(a,b) {return a + b}, 0) / avgPerDay[ap][valueType].length;
             return avg / Conf.getRoomCapacity(room);
             break;
         case 'current':
-            if (value === 'room') {
-                return _current[Conf.getRoomAp(room)] * getRoomPercentage(Conf.getRoomAp(room), room);
-            } else if (value === 'ap') {
+            console.log('Current: ' + _current[Conf.getRoomAp(room)]);
+            if (valueType === 'roomCap') {
+                return _current[Conf.getRoomAp(room)] * getRoomPercentage(room);
+            } else {
                 return _current[Conf.getRoomAp(room)];
             }
             break;
-
-        case 'default':
+        default:
             statusMessage('Wrong Graph type', 'error');
-            console.log('Type: ' + type + ' not valid');
+            console.log('Type: ' + dataType + ' not valid');
             break;
     }
 }
 
-
-function hasData() {
-    return Object.keys(roomData).length != 0;
+function getAPdata(ap, valueType) {
+    return (avgPerDay[ap][valueType].reduce(function(a,b) {return a + b}, 0) /
+            avgPerDay[ap][valueType].length) / getApCapacity(ap);
 }
 
-export {data, getData, getNormalized, roomData, 
+function hasData() {
+    return Object.keys(avgPerDay).length != 0;
+}
+
+export {data, getData, getRoomData, getAPdata,
         getCurrentTotal, totalAvgPerDay, hasData, initDataHandler};

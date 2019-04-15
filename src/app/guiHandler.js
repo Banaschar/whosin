@@ -60,16 +60,16 @@ function createMenu(sidebar, assetList) {
     //menu.appendChild(createListEle(createA('#', 'Visual')));
 
     /* Time Select Elements */
-    var b = document.createElement('b');
-    b.innerHTML = 'Time frame: ';
-    menu.appendChild(b);
-    menu.appendChild(createDropDown(['None', '24h', 'Month', '6 Months', '12 Months'], 
-        ['None', '-24h', '-1month', '-6months', '-12months'], 'timeSelect', getData));
-    var loadM = document.createElement('b');
-    loadM.innerHTML = 'Building: ';
-    menu.appendChild(loadM);
-    assetList.unshift('None');
-    menu.appendChild(createDropDown(assetList, assetList, 'modelSelect', getModel));
+    //var b = document.createElement('b');
+    //b.innerHTML = 'Time: ';
+    //menu.appendChild(b);
+    menu.appendChild(createListEle(createDropDown(['Choose Time', '24h', 'Month', '6 Months', '12 Months'], 
+        ['None', '-24h', '-1month', '-6months', '-12months'], 'timeSelect', getData)));
+    //var loadM = document.createElement('b');
+    //loadM.innerHTML = 'Model: ';
+    //menu.appendChild(loadM);
+    assetList.unshift('Choose Model');
+    menu.appendChild(createListEle(createDropDown(assetList, assetList, 'modelSelect', getModel)));
 
     /* Menu items */
     var item2 = createListEle(createA('#', 'Data per Room'));
@@ -81,7 +81,7 @@ function createMenu(sidebar, assetList) {
         }
         event.stopPropagation();
         var text = 'Average Room usage in percent of room capacity';
-        viewConcept1('room', 'value', text);
+        viewConcept1('roomCap', 'value', text);
     })));
     sub1.appendChild(createListEle(createButton('Avg. max. per Day', false, function(){
         if (!event) {
@@ -89,7 +89,7 @@ function createMenu(sidebar, assetList) {
         }
         event.stopPropagation();
         var text = 'Average Max. Room usage in percent of room capacity';
-        viewConcept1('room', 'max', text);
+        viewConcept1('roomCap', 'max', text);
     })));
     sub1.appendChild(createListEle(createButton('Graph3', false, function(){
         if (!event) {
@@ -98,7 +98,7 @@ function createMenu(sidebar, assetList) {
         event.stopPropagation();
     })));
     sub1.appendChild(createDropDown(['None'], ['None'], 'floorDropdown', function() {
-        floorView('room', 'floorDropdown');
+        floorView('roomCap', 'floorDropdown');
     }));
     
     var slider = document.createElement('input');
@@ -139,7 +139,7 @@ function createMenu(sidebar, assetList) {
         }
         event.stopPropagation();
         var text = 'Average Room usage in percent of Access Point capacity';
-        viewConcept1('ap', 'value', text);
+        viewConcept1('total', 'value', text);
     })));
     sub2.appendChild(createListEle(createButton('Avg. max. per Day', false, function(){
         if (!event) {
@@ -147,10 +147,10 @@ function createMenu(sidebar, assetList) {
         }
         event.stopPropagation();
         var text = 'Average Max. Room usage in percent of Access Point capacity';
-        viewConcept1('ap', 'max', text);
+        viewConcept1('total', 'max', text);
     })));
     sub2.appendChild(createDropDown(['None'], ['None'], 'floorDropdown2', function() {
-        floorView('ap', 'floorDropdown2');
+        floorView('total', 'floorDropdown2');
     }));
     item3.addEventListener('click', function() {
         if (sub2.classList.contains('active')) {
@@ -167,12 +167,12 @@ function createMenu(sidebar, assetList) {
 
     var item4 = createListEle(createA('#', 'Current total'));
     item4.addEventListener('click', function() {
-        Visualization.displayGraph('current', 'ap', 'Current total');
+        Visualization.displayGraph('room', 'current', 'total', 'Current absolut connections, total per AP', 'graph2');
     })
     menu.appendChild(item4);
     var item5 = createListEle(createA('#', 'Current per room'));
     item5.addEventListener('click', function() {
-        Visualization.displayGraph('current', 'room', 'Current per room');
+        Visualization.displayGraph('room', 'current', 'roomCap', 'Current absolut connections as fraction of capacity', 'graph2');
     })
     menu.appendChild(item5);
     var item6 = createListEle(createA('#', 'Access Points'));
@@ -194,16 +194,16 @@ function initSideBar(container, assetList) {
     sidebar.setAttribute('id', 'sidebarMenu');
     sidebar.setAttribute('class', 'sidebar');
     document.body.appendChild(createButton('☰ Menu', 'menuBtn', function() {
-        if (sidebar.style.width === '250px') {
+        if (sidebar.style.width === '200px') {
             sidebar.style.width = '0px';
             container.style.left = '0px';
             // change by adding right: 0 
             container.style.width = window.innerWidth + 'px';
             //document.getElementById('barGraph').style.left = '0px'; 
         } else {
-            sidebar.style.width = '250px';
-            container.style.left = '250px';
-            container.style.width = (window.innerWidth - 250) + 'px';
+            sidebar.style.width = '200px';
+            container.style.left = '200px';
+            container.style.width = (window.innerWidth - 200) + 'px';
             //document.getElementById('barGraph').style.left = '250px'; 
         }
 
@@ -241,27 +241,32 @@ var activeConcepts = {
     'floors': false
 };
 
-function viewConcept1(type, value, title) {
+function viewConcept1(dataType, valueType, title) {
     if (DataHandler.hasData()) {
         Visualization.makeTransparent('all', 0.3);
-        Visualization.colorMap(type, value, 'None');
+        Visualization.colorMap(dataType, valueType, 'None');
         console.log(_container.style.left);
-        Visualization.displayGraph(type, value, title);
+        Visualization.displayGraph('room', dataType, valueType, title, 'graph1');
+        var max;
+        if (valueType === 'max') {
+            max = ' max.';
+        } else { max = ''; }
+        Visualization.displayGraph('ap', null, valueType, 'Avg.' + max + ' AP utilization in percent of supported capacity', 'graph2');
         // TODO: Camera angle
     } else {
-        EventHandler.statusMessage('Keine Daten verfügbar', 'error');
+        EventHandler.statusMessage('No data available', 'error');
     }
 }
 
-function floorView(type, menu) {
+function floorView(dataType, menu) {
     var drop = document.getElementById(menu);
     var floor = drop.options[drop.selectedIndex].value;
     Visualization.hideFloors(floor);
     if (DataHandler.hasData()) {
-        Visualization.pillarMap(type, 'max', floor);
+        Visualization.pillarMap(dataType, 'max', floor);
         // TODO: camera angle
     } else {
-        EventHandler.statusMessage('Keine Daten verfügbar', 'error');
+        EventHandler.statusMessage('No data available', 'error');
     }
 }
 
@@ -279,6 +284,7 @@ function getData() {
 
 function displayAccessPoints() {
     Visualization.apSphere();
+    Visualization.displayGraph('ap', null, 'value', 'Avg. AP utiliation in percent of supported capacity', 'graph2');
 }
 
 function getModel() {

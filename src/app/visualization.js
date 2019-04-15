@@ -93,9 +93,12 @@ function updateAPcolorMap() {
 function apSphere() {
     _apSphere = !_apSphere;
     function __appColor(floor, room) {
+        var col = new Color(_colorMapAP[Conf.getRoomAp(room)]);
         roomList[floor][room].material.transparent = false;
-        roomList[floor][room].material.color = new Color(_colorMapAP[Conf.getRoomAp(room)]);
+        roomList[floor][room].material.color = col;
         roomList[floor][room].material.needsUpdate = true;
+        roomList2d[floor][room].material.color = col;
+        roomList2d[floor][room].material.needsUpdate = true;
     }
     if (_apSphere) {
 
@@ -155,8 +158,8 @@ function _getColorValue(perc) {
     }
 }
 
-function _getColor(type, value, room) {
-    var perc = DataHandler.getNormalized(type, value, room) * 100;
+function _getColor(room, dataType, valueType) {
+    var perc = DataHandler.getRoomData(room, dataType, valueType) * 100;
     return _getColorValue(perc);
 }
 
@@ -167,7 +170,7 @@ function _getColor(type, value, room) {
     objects in a row and one redered first.
     material.alphaTest has to be larger/smaller than opacity
 */
-function colorMap(type, value, floor) {
+function colorMap(dataType, valueType, floor) {
     //_colorMap = !_colorMap;
     _colorMap = true;
 
@@ -186,7 +189,7 @@ function colorMap(type, value, floor) {
         if (floor === 'None') {
             for (var floorKey in roomList) {
                 for (var roomKey in roomList[floorKey]) {
-                    var col = new Color(_getColor(type, value, roomKey));
+                    var col = new Color(_getColor(roomKey, dataType, valueType));
                     __applyColor3d(floorKey, roomKey, col);
                     __applyColor2d(floorKey, roomKey, col);
                 }
@@ -231,7 +234,7 @@ function _clearColor() {
     THE Z coordinate for all rooms of a floor is the same!!!!
     So I need to compute it only once, for gods sake!!!
 */
-function pillarMap(type, value, floor) {
+function pillarMap(dataType, valueType, floor) {
 
     _pillarMap = !_pillarMap;
 
@@ -333,7 +336,7 @@ function pillarMap(type, value, floor) {
 
         } else {
             for (var roomKey in roomList[floor]) {
-                var scale = 1 + DataHandler.getNormalized(type, value, roomKey) * 3;
+                var scale = 1 + DataHandler.getRoomData(roomKey, dataType, valueType) * 3;
                 // Necessary to reverse scaling
                 _lastPillar[roomKey] = scale;
 
@@ -345,24 +348,40 @@ function pillarMap(type, value, floor) {
 
 }
 
-function displayGraph(type, value, title) {
-    if (DataHandler.hasData()) {
-        var _graphDiv = document.getElementById('graph1');
-        _graphDiv.innerHTML = title;
-        var _label = [];
-        var _values = [];
+function _getGraphData(entity, dataType, valueType) {
+    var _label = [];
+    var _values = [];
+    if (entity === 'ap') {
+        for (var ap in apList) {
+            _label.push(ap);
+            _values.push(DataHandler.getAPdata(ap, valueType) * 100);
+        }
+    } else if (entity === 'room') {
         for (var room of roomListString) {
             _label.push(room.substring(4, ));
-            if (type === 'current') {
-                _values.push(DataHandler.getNormalized(type, value, room));
+            if (dataType === 'current') {
+                _values.push(DataHandler.getRoomData(room, dataType, valueType));
             } else {
-                _values.push(DataHandler.getNormalized(type, value, room) * 100);
+                _values.push(DataHandler.getRoomData(room, dataType, valueType) * 100);
             }
         }
+    } else {
+        statusMessage('No valid entity for graph: ' + entity, 'error');
+        console.log('No valid entity for graph: ' + entity);
+        return [];
+    }
+    return [_label, _values];
+}
 
-        var chart = new Chartist.Bar('#graph1', {
-            labels: _label,
-            series: _values
+function displayGraph(entity, dataType, valueType, title, div) {
+    if (DataHandler.hasData()) {
+        var _graphDiv = document.getElementById(div);
+        _graphDiv.innerHTML = title;
+        var data = _getGraphData(entity, dataType, valueType)
+
+        var chart = new Chartist.Bar('#' + div, {
+            labels: data[0],
+            series: data[1]
         }, {
             distributeSeries: true,
             width: '100%',
@@ -380,6 +399,8 @@ function displayGraph(type, value, title) {
             }
         });
         
+    } else {
+        statusMessage('No data available', 'error');
     }
 }
 

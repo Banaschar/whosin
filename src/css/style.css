@@ -99,13 +99,14 @@ body {
 }
 
 .mainmenu select {
-    display: inline-block;
+    display: block;
     text-decoration: none;
     transition: 0.3s;
     background-color: #CCC;
     color: #000;
     padding: 10px;
     cursor: pointer;
+    width: 100%;
 }
 
 .submenu a {
@@ -166,18 +167,6 @@ body {
     padding-top: 10px;
 }
 
-.sidebar .closebtn {
-    position: absolute;
-    top: 0;
-    right: 25px;
-    font-size: 36px;
-    margin-left: 50px;
-    border: none;
-    background-color: #111;
-    color: white;
-    cursor: pointer;
-}
-
 .sidebar .mainmenu {
     transition: 0.3s;
 }
@@ -192,7 +181,7 @@ body {
     color: white;
     /*padding: 10px 15px;*/
     height: 30px;
-    width: 250px;
+    width: 200px;
     border: none;
     outline: none;
 }
@@ -205,7 +194,7 @@ body {
     position: fixed;
     background-color: #111;
     height: 30px;
-    left: 250px;
+    left: 200px;
     top: 0;
     right: 0;
     border: none;
@@ -213,25 +202,6 @@ body {
     padding-right: 50px;
     text-align: right;
     color: red;
-}
-
-/* Button Group */
-.btn-group button {
-    background-color: #4CAF50;
-    border: 1px solid green;
-    color: white;
-    padding: 10px, 2px;
-    cursor: pointer;
-    width: 100%;
-    display: block;
-}
-
-.btn-group button:not(:last-child) {
-    border-bottom: none;
-}
-
-.btn-group button:hover {
-    backgroun-color: #3e8e41;
 }
 
 /* Floating room annotation */

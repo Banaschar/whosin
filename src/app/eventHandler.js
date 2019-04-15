@@ -41,7 +41,6 @@ function _initLoadingManager() {
     overlay.appendChild(bar);
     document.body.appendChild(overlay);
 
-    //LoadingManager.prototype.loadType = null;
     var loadType = null;
 
     LoadingManager.prototype.setup = function(txt, type) {
@@ -56,19 +55,22 @@ function _initLoadingManager() {
     _manager.onLoad = function() {
         overlay.classList.add('loadingScreenHidden');
         progress.style.width = 0;
-        statusMessage(loadType + ' erfolgreich geladen', 'status');
+        statusMessage(loadType + ' succesfully loaded', 'status');
     };
 
     _manager.onProgress = function(xhr) {
-        //console.log(xhr.loaded);
-        progress.style.width = xhr.loaded / xhr.total * 100 + '%';
+        if (loadType === 'data') {
+            progress.style.width = xhr + '%';
+        } else {
+            progress.style.width = xhr.loaded / xhr.total * 100 + '%';
+        }
     };
 
     _manager.onError = function(e) {
         console.error(e);
         overlay.classList.add('loadingScreenHidden');
         progress.style.width = 0;
-        statusMessage(loadType + ': Fehler', error);
+        statusMessage(loadType + ': Error loading', 'error');
         // For zip loader error: create cases:
         //console.log('error', event.error);
         //progress.style.backgroundColor = 'red';
@@ -156,11 +158,9 @@ function _checkIntersections(container) {
 
     if (intersections.length === 0 && _currHoverObject !== null) {
         hideAnnotation();
-        //updateAnnotation(null, false);
         _currHoverObject = null;
     } else if (intersections.length > 0 && intersections[0].object.name !== _currHoverObject) {
         updateAnnotation(_mouse, container, intersections[0].object.name);
-        //updateAnnotation(intersections[0].object, true)
         _currHoverObject = intersections[0].object.name;
     } else if (intersections.length > 0 && intersections[0].object.name === _currHoverObject) {
         updateAnnotationPosition(_mouse, container);

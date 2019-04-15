@@ -91,33 +91,14 @@ function _initCamera() {
     var h = renderer2.domElement.clientHeight;
     cameraOrtho = new OrthographicCamera(w / -2, w / 2, h / 2, h / -2, -10, 200)
 
-    //cameraPers.position.set(-154, 54, 70);
     cameraPers.position.set(-121, 68, 76);
-    //cameraPers.position.set(-107, 66, 54);
-    //cameraPers.updateProjectionMatrix();
+    cameraPers.zoom = 1.8;
+    cameraPers.updateProjectionMatrix();
     //cameraOrtho.updateProjectionMatrix();
 }
 
-
-/*
-function _initCamera(container) {
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    cameraPers = new PerspectiveCamera(45, width / height, 1, 1000);
-    cameraOrtho = new OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 100);
-    //cameraOrtho = new OrthographicCamera(-width / 2, width / 2, height / 2, -height / 2, 1, 1000);
-    
-    //cameraPers.position.set(-154, 54, 70);
-    cameraPers.position.set(-102, 66, 71);
-    //cameraOrtho.position.z = 10;
-}
-*/
-
 function _initControls() {
     controls = new OrbitControls(cameraPers, renderer.domElement);
-    //controlsOrtho = new OrbitControls(cameraOrtho, renderer2.domElement);
-    //controlsOrtho.enableDamping = true;
-    //controlsOrtho.dampingFactor = 0.25;
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
     controls.enableZoom = true;

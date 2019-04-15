@@ -19,7 +19,7 @@ function getRoomAp(room) {
             return _ap;
         }
     }
-    return roomAp[room];
+    return 0
 }
 
 function getApRooms(ap) {

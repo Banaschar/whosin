@@ -1,0 +1,4 @@
+BIND_ADDRESS = "0.0.0.0"
+SERVER = 'production'
+LOG_LEVEL = 'DEBUG'
+FLASK_PORT = "5555"

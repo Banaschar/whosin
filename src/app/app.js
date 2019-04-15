@@ -11,6 +11,7 @@ import {initDataHandler} from './dataHandler';
 import config from "../config.json";
 import {statusMessage, onWindowResize} from './eventHandler.js';
 import {setConfig} from './conf.js';
+import {setDevMode} from './dataHandler.js';
 
 // TODO: Import all files in the assets directory and load by file name (building name)
 import defaultModel from '../assets/0501.zip';
@@ -46,26 +47,24 @@ function init() {
     setConfig(CONFIG);
     initScene(container);
     
+    /*
+     * If using node.js dev server, load default model and use
+     * cross-origin api calls (needs browser extension), instead of backend rest api
+     */
     if (dev) {
         loadZip(defaultModel);
+        setDevMode();
     }
     // TODO: Combine sprite and annotation init methods
-    initSpriteHandler();
+    //initSpriteHandler();
     initAnnotation();
 
     initColorMap(container);
 
     //stats = new Stats();
-
-    //container.appendChild(renderer.domElement);
-    //container.appendChild(renderer2.domElement);
     //document.body.appendChild(stats.dom);
 
-    
-    //console.log(renderer.domElement.clientWidth);
-    //console.log(renderer.domElement.clientHeight);
     renderer.setSize(renderer.domElement.clientWidth, renderer.domElement.clientHeight);
-    
     renderer2.setSize(renderer2.domElement.clientWidth, renderer2.domElement.clientHeight);
 }
 
@@ -75,7 +74,6 @@ function render() {
     
     renderer.render(scenePers, cameraPers);
     renderer2.render(sceneOrtho, cameraOrtho);
-    
     
     //stats.update();
 }

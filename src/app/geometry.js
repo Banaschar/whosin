@@ -51,10 +51,9 @@ function loadZip(path) {
             var reg = /\.dae$/;
             return reg.test(ele);
         });
-        
-        loadModel(loader, manager);
-
         manager.onLoad();
+        loadModel(loader, manager);
+        
     });
 
     loader.load();
@@ -90,6 +89,7 @@ function loadModel(zipLoader, manager) {
         _loadNodes(collada.scene);
         _updateModelDependent();
         _modelLoaded = true;
+        manager.onLoad();
 
     }, manager.onProgress, manager.onError);
 
@@ -146,25 +146,6 @@ function _updateModelDependent() {
     setEventObjects(roomList, roomList2d);
     updateMenu(roomList);
     updateAPcolorMap();
-}
-
-function _createRoomTexture() {
-    const _canvas = document.createElement('canvas');
-    const ctx = _canvas.getContext('2d');
-    _canvas.height = 32;
-    _canvas.width = 128;
-
-    ctx.fillStyle = "blue";
-    ctx.fillRect(0, 0, _canvas.width, _canvas.height);
-
-    ctx.fillStyle = 'rgb(255, 255, 255)';
-    ctx.font = '16px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('roomblabla', _canvas.width / 2, _canvas.height / 2);
-    var _toolTipTexture = new CanvasTexture(_canvas);
-    var mat = new MeshBasicMaterial({ map: _toolTipTexture});
-    return mat;
 }
 
 function _createRoomSprite(name, posX, posY) {

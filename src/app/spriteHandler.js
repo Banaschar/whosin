@@ -1,6 +1,7 @@
 import {Texture, SpriteMaterial, Sprite, CanvasTexture, Vector3} from "three";
 import {scenePers, cameraPers, renderer} from './sceneHandler';
 import {totalAvgPerDay, hasData} from './dataHandler'
+import {getCurrentState} from './guiHandler';
 import * as Conf from './conf';
 import * as Chartist from "chartist";
 import "../css/chartist.min.css";
@@ -107,7 +108,8 @@ function _projectY(chartRect, bounds, value) {
 }
 
 function _createGraph(room) {
-    var values = totalAvgPerDay(room);
+    var st = getCurrentState();
+    var values = totalAvgPerDay(room, st.dataType, st.valueType);
     if (values) {
         var chart = new Chartist.Bar('#roomGraph', {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -188,5 +190,5 @@ function initAnnotation() {
     _div.appendChild(_graphDiv);  
 }
 
-export {tooltipSprite, updateTooltip, initSpriteHandler, initAnnotation,
+export {tooltipSprite, initSpriteHandler, initAnnotation,
         hideAnnotation, updateAnnotationPosition, updateAnnotation};

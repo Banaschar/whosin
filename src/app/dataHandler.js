@@ -1,5 +1,5 @@
 import * as Conf from './conf';
-import {statusMessage} from './eventHandler';
+import {statusMessage, getLoadingManager} from './eventHandler';
 
 var _baseUrl = 'http://graphite-kom.srv.lrz.de/render/?target=';
 var data = {};
@@ -11,17 +11,20 @@ var avgPerDay = {};
 var _current = {};
 var _loadingManager;
 var _numRequests;
+var _requestTracker = {};
+var _devMode = false;
 
 function _handleSuccess() {
-    //this.callback.apply(this, this.arguments);
-    console.log("Success: " + this.arguments[0]);
-    var ap = this.arguments[0];
-    var timeRange = this.arguments[1];
-    var res = this.responseText.split("\n");
+    if (this.status === 200) {
+        _parseData(this.arguments[0], this.arguments[1], this.responseText.split("\n"));
+    } else {
+        _handleError(this.status);
+    }
+}
+
+function _parseData(ap, timeRange, res) {
     var result = [];
     var _tmp;
-    // HACKY, REMOVE AND COMBINE
-    var _tmp2 = [];
     var _time;
     _timeListData[ap] = {
         "time": [],
@@ -42,16 +45,16 @@ function _handleSuccess() {
 
     // calc Data per day
     calcAvgPerDay(ap);
+
     --_numRequests;
-    console.log(_numRequests);
     if (_numRequests === 0) {
-        statusMessage('All Data loaded', 'status');
+        _loadingManager.onLoad();
     }
 }
 
-function _handleError() {
-    console.error(this.statusText);
-    statusMessage('Error loading Data', 'error');
+function _handleError(e) {
+    console.error(e);
+    _loadingManager.onError(e);
 }
 
 function _prog(oEvent) {
@@ -60,10 +63,28 @@ function _prog(oEvent) {
 
 function _doRequest(url, ap, timeframe) {
     var req = new XMLHttpRequest();
+    _requestTracker[ap] = 0;
     req.arguments = Array.prototype.slice.call(arguments, 1);
     req.onload = _handleSuccess;
+/*
+    function() {
+            console.log('Rdy: ' + req.readyState + '. Status: ' + req.status);
+            if (req.status === 200) {
+                _handleSuccess();
+            } else {
+                _handleError(req.status);
+            }
+        };
+        */
     req.onerror = _handleError;
-    //req.onprogress = _loadingManager.onProgress;
+    req.onprogress = function(evt) {
+        _requestTracker[ap] = evt.loaded / evt.total * 100;
+        var sum = 0;
+        for (var key in _requestTracker) {
+            sum += _requestTracker[key];
+        }
+        _loadingManager.onProgress(sum / Object.keys(_requestTracker).length);
+    }
     req.open("GET", url, true);
     req.send(null);
 }
@@ -85,14 +106,23 @@ function _buildURL(ap, timeframe) {
  *  timeframe: String
  */
 function getData(aps, timeframe) {
-    //_loadingManager.setup('Loading Access Point data...', 'data');
+    statusMessage('...loading Data...', 'status');
+    _loadingManager = getLoadingManager();
+    _loadingManager.setup('Loading Access Point data...', 'data');
     _numRequests = Object.keys(aps).length;
     for (var ap in aps) {
-        //var url = _buildURLrest(ap, timeframe);
-        var url = _buildURL(ap, timeframe);
-        console.log(url);
+        if (!_devMode) {
+            var url = _buildURLrest(ap, timeframe);
+        } else {
+            var url = _buildURL(ap, timeframe);
+        }
+        //console.log(url);
         _doRequest(url, ap, timeframe);
     }
+}
+
+function setDevMode() {
+    _devMode = true;
 }
 
 /*
@@ -139,14 +169,20 @@ function calcAvgPerDay(ap) {
  * Return the total average value for each day in the week as a list
  * As a percentage of the room capacity
 */
-function totalAvgPerDay(room) {
+function totalAvgPerDay(room, dataType, valueType) {
     var ap = Conf.getRoomAp(room);
-    var perc = getRoomPercentage(room);
+    var perc = 1;
+    if (dataType === 'roomCap') {
+        perc = getRoomPercentage(room);
+    }
+    if (!valueType) {
+        valueType = 'max';
+    }
     var res = [0, 0, 0, 0, 0];
     var res_avg = [0, 0, 0, 0, 0];
     var index = 0;
     for (var day of avgPerDay[ap]["time"]) {
-        res[day.getDay() - 1] += avgPerDay[ap]["max"][index] * perc;
+        res[day.getDay() - 1] += avgPerDay[ap][valueType][index] * perc;
         res_avg[day.getDay() - 1] += 1;
         index += 1;
     }
@@ -192,8 +228,9 @@ function getRoomData(room, dataType, valueType) {
 
     switch(dataType) {
         case 'roomCap':
-            var avg = (getRoomPercentage(room) * avgPerDay[ap][valueType].reduce(
-                        function(a,b) {return a + b;}, 0)) / avgPerDay[ap][valueType].length;
+            var avg = getRoomPercentage(room) * (avgPerDay[ap][valueType].reduce(
+                        function(a,b) {return a + b;}, 0) / avgPerDay[ap][valueType].length);
+            //console.log(room + ' avg: ' + avg + ', perc: ' + getRoomPercentage(room));
             return avg / Conf.getRoomCapacity(room);
             break;
         case 'total':
@@ -202,7 +239,7 @@ function getRoomData(room, dataType, valueType) {
             return avg / Conf.getRoomCapacity(room);
             break;
         case 'current':
-            console.log('Current: ' + _current[Conf.getRoomAp(room)]);
+            //console.log('Current: ' + _current[Conf.getRoomAp(room)]);
             if (valueType === 'roomCap') {
                 return _current[Conf.getRoomAp(room)] * getRoomPercentage(room);
             } else {
@@ -225,5 +262,5 @@ function hasData() {
     return Object.keys(avgPerDay).length != 0;
 }
 
-export {data, getData, getRoomData, getAPdata,
+export {data, getData, getRoomData, getAPdata, setDevMode,
         getCurrentTotal, totalAvgPerDay, hasData, initDataHandler};

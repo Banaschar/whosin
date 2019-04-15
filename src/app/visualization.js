@@ -17,15 +17,10 @@ import {Lut} from 'three/examples/js/math/Lut';
 var _colorMap = false;
 var _pillarMap = false;
 var _apSphere = false;
-var _graph = false;
 var _sphereList = [];
 var _lastFloor = 'None';
 var _lastPillar = {};
-var _lut;
-var _legendSprite;
-var _updateQueue = [];
 var _tmpPillarGeometry = [];
-//var _graphDiv;
 var _colorList;
 
 /* Predefine list of colors, assigned to access points at runtime */
@@ -217,15 +212,37 @@ function colorMap(dataType, valueType, floor) {
 
 function _clearColor() {
     for (var floor in roomList) {
-        var col = new Color({r: 0.65098, g: 0.709804, b: 0.886275});
+        var col1 = new Color({r: 0.65098, g: 0.709804, b: 0.886275});
+        var col2 = new Color(0x444444);
         for (var key in roomList[floor]) {
-            roomList[floor][key].material.color = col;
+            roomList[floor][key].material.color = col1;
             roomList[floor][key].material.opacity = 0.38;
             roomList[floor][key].material.transparent = true;
             roomList[floor][key].material.needsUpdate = true;
-            roomList2d[floor][room].material.color = col;
-            roomList2d[floor][room].material.needsUpdate = true;
+            roomList2d[floor][key].material.color = col2;
+            roomList2d[floor][key].material.needsUpdate = true;
         }
+    }
+}
+
+function clearAll() {
+    makeTransparent('all', 1.0);
+    _clearColor();
+    if (_apSphere) {
+        apSphere();
+    }
+    //pillarMap(null, null, 'None');
+    try {
+        var g = document.getElementById('graph1');
+        while (g.firstChild) {
+            g.removeChild(g.firstChild);
+        }
+        g = document.getElementById('graph2');
+        while (g.firstChild) {
+            g.removeChild(g.firstChild);
+        }
+    } catch(e) {
+        console.log(e);
     }
 }
 
@@ -377,7 +394,17 @@ function displayGraph(entity, dataType, valueType, title, div) {
     if (DataHandler.hasData()) {
         var _graphDiv = document.getElementById(div);
         _graphDiv.innerHTML = title;
-        var data = _getGraphData(entity, dataType, valueType)
+        var data = _getGraphData(entity, dataType, valueType);
+        var dynColor;
+        if (entity === 'ap') {
+            dynColor = function(ctx) {
+                return _getCSScolor(_colorMapAP[ctx.axisX.ticks[ctx.seriesIndex]]);
+            }
+        } else {
+            dynColor = function(ctx) {
+                return _getCSScolor(_getColorValue(ctx.value.y));
+            };
+        }
 
         var chart = new Chartist.Bar('#' + div, {
             labels: data[0],
@@ -394,7 +421,7 @@ function displayGraph(entity, dataType, valueType, title, div) {
         chart.on('draw', function(context) {
             if (context.type === 'bar') {
                 context.element.attr({
-                    style: 'stroke: ' + _getCSScolor(_getColorValue(context.value.y)) + ';'
+                    style: 'stroke: ' + dynColor(context) + ';'
                 });
             }
         });
@@ -435,4 +462,4 @@ function hideFloors(floor) {
 export {colorMap, pillarMap, apSphere, 
         setCurrentFloor, hideFloors, makeTransparent, 
         displayGraph, initColorMap,
-        displayCurrentGraph, updateAPcolorMap}
+        displayCurrentGraph, updateAPcolorMap, clearAll}

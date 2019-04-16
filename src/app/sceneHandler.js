@@ -73,19 +73,21 @@ function updateCameras(width3d, width2d) {
 
 /* Center orthographic camera on the room group */
 function updateCameraOrtho() {
-    var box = getBox2d();
-    cameraOrtho.zoom = Math.min(renderer2.domElement.clientWidth / (box.max.x - box.min.x),
-                renderer2.domElement.clientHeight / (box.max.y - box.min.y)) * 0.9;
-    
-    box.getCenter(cameraOrtho.position);
-    cameraOrtho.updateProjectionMatrix();
+    try {
+        var box = getBox2d();
+        cameraOrtho.zoom = Math.min(renderer2.domElement.clientWidth / (box.max.x - box.min.x),
+                    renderer2.domElement.clientHeight / (box.max.y - box.min.y)) * 0.9;
+        
+        box.getCenter(cameraOrtho.position);
+        cameraOrtho.updateProjectionMatrix();
+    } catch(e) {
+        console.log('Model not yet loaded');
+    }
 }
 
 function _initCamera() {
     cameraPers = new PerspectiveCamera(45, 
         renderer.domElement.clientWidth / renderer.domElement.clientHeight, 1, 1000);
-    //cameraOrtho = new PerspectiveCamera(90,
-    //    renderer2.domElement.clientWidth / renderer2.domElement.clientHeight, 1, 1000);
     var w = renderer2.domElement.clientWidth;
     var h = renderer2.domElement.clientHeight;
     cameraOrtho = new OrthographicCamera(w / -2, w / 2, h / 2, h / -2, -10, 200)

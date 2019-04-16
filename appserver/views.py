@@ -25,12 +25,12 @@ def start():
 
 @app.route('/getAsset/<path:path>')
 def serveAssets(path):
-    logger.info('Log Request Path: {}'.format(path))
+    logger.debug('Log Request Path: {}'.format(path))
     return send_from_directory('static/assets', path)
 
 @app.route('/getData/<path:target>')
 def requestAPdata(target):
     # TODO: Maybe check target url, so it can't be spoofed
-    logger.info('Target: {}'.format(target))
+    logger.debug('Target: {}'.format(target))
     resp = requests.get(target, params=request.args, stream=True)
     return resp.raw.read(), resp.status_code, resp.headers.items()

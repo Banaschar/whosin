@@ -28,18 +28,18 @@ function _parseData(ap, timeRange, res) {
         "time": [],
         "value": [],
     }
-    var last;
     for (var i of res) {
         _tmp = i.split(",");
 
         _time = new Date(_tmp[1]);
         if (_time.getDay() > 0 && _time.getDay() < 6 && _time.getHours() > 7 && _time.getHours() < 18) {
             _timeListData[ap]["time"].push(_time);
-            last = Number(_tmp[_tmp.length - 1]) || 0
-            _timeListData[ap]["value"].push(last)
+            _timeListData[ap]["value"].push(Number(_tmp[_tmp.length - 1]) || 0)
         }
     }
-    _current[ap] = last;
+
+    // Define curren connections as average of last 15min
+    _current[ap] = _timeListData[ap]["value"].slice(-3, ).reduce(function(a, b) { return a + b; }, 0) / 3;
 
     // calc Data per day
     calcAvgPerDay(ap);

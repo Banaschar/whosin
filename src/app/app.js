@@ -13,9 +13,6 @@ import {statusMessage, onWindowResize} from './eventHandler.js';
 import {setConfig} from './conf.js';
 import {setDevMode} from './dataHandler.js';
 
-// TODO: Import all files in the assets directory and load by file name (building name)
-import defaultModel from '../assets/0501.zip';
-
 var stats;
 var container;
 
@@ -52,7 +49,7 @@ function init() {
      * cross-origin api calls (needs browser extension), instead of backend rest api
      */
     if (dev) {
-        loadZip(defaultModel);
+        loadZip('./0501.zip');
         setDevMode();
     }
     

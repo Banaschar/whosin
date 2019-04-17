@@ -4,6 +4,7 @@ const CAP = "RoomCapacity";
 const SIZE = "RoomSize";
 const COLOR = "ColorMap";
 const BARGRAPH = "BarGraph";
+const BOUNDARIES = 'DataTimeBounds';
 
 function getRoomCapacity(room) {
     return _conf[CAP][room];
@@ -38,4 +39,9 @@ function getBarGraphConf() {
     return _conf[BARGRAPH];
 }
 
-export {getRoomCapacity, getRoomAp, getApRooms, setConfig, getColors}
+function getDayBoundaries() {
+    return _conf[BOUNDARIES];
+}
+
+export {getRoomCapacity, getRoomAp, getApRooms,
+        getDayBoundaries, setConfig, getColors}

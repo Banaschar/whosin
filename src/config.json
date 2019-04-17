@@ -41,5 +41,10 @@
     "BarGraph": {
         "ColorBar": "0x207DFF",
         "ColorTargetLine": "0x8b0000"
+    },
+
+    "DataTimeBounds": {
+        "morning": 7,
+        "evening": 18
     }
 }

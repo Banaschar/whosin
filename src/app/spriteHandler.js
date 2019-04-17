@@ -12,10 +12,16 @@ var _div;
 var _textNode;
 var _graphDiv;
 
-/* Limit for the tooltip graph */
+/* Limit for the tooltip graph
+ * Not entirely accurate apparently, off by like -2/-3
+ */
 function _projectY(chartRect, bounds, value) {
+    /*
   return chartRect.y1 - 
     (chartRect.height() * (value - bounds.min) / (bounds.range + bounds.step));
+    */
+    return chartRect.y1 - 
+    (chartRect.height() / bounds.max * value);
 }
 
 function _createGraph(room) {

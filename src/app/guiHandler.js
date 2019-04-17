@@ -328,7 +328,6 @@ function viewConcept1(dataType, dataValue, title) {
                         new ColorMap(null),
                         new Graph1(null, title, 'heat'),
                         new Graph2(graph2data, graph2title, 'ap')]);
-        console.log(dataObj);
         Visualization.applyVisualization(dataObj);
         state.dataType = dataType;
         state.dataValue = dataValue;

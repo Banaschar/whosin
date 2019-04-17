@@ -24,6 +24,8 @@ function _parseData(ap, timeRange, res) {
     var result = [];
     var _tmp;
     var _time;
+    var bounds = Conf.getDayBoundaries();
+
     _timeListData[ap] = {
         "time": [],
         "value": [],
@@ -32,7 +34,11 @@ function _parseData(ap, timeRange, res) {
         _tmp = i.split(",");
 
         _time = new Date(_tmp[1]);
-        if (_time.getDay() > 0 && _time.getDay() < 6 && _time.getHours() > 7 && _time.getHours() < 18) {
+        if (_time.getDay() > 0 && 
+            _time.getDay() < 6 && 
+            _time.getHours() > bounds['morning'] && 
+            _time.getHours() < bounds['evening']) {
+
             _timeListData[ap]["time"].push(_time);
             _timeListData[ap]["value"].push(Number(_tmp[_tmp.length - 1]) || 0)
         }

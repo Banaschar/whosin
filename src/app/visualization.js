@@ -13,7 +13,6 @@ import * as Chartist from "chartist";
 import "../css/chartist.min.css";
 import "../css/style.css";
 
-var _colorMap = false;
 var _pillarMap = false;
 var _apSphere = false;
 var _sphereList = [];
@@ -152,21 +151,13 @@ function _getColorValue(perc) {
     }
 }
 
-function _getColor(room, dataType, valueType) {
-    var perc = DataHandler.getRoomData(room, dataType, valueType) * 100;
-    return _getColorValue(perc);
-}
-
-
 /*
     Problems: If the room material is set to transparent, it's not showing through
     the outer wall. That's likely because of render order with two transparent
     objects in a row and one redered first.
     material.alphaTest has to be larger/smaller than opacity
 */
-function colorMap(dataType, valueType, floor) {
-    //_colorMap = !_colorMap;
-    _colorMap = true;
+function colorMap(values) {
 
     function __applyColor3d(floor, room, col) {
         roomList[floor][room].material.transparent = false;
@@ -178,35 +169,15 @@ function colorMap(dataType, valueType, floor) {
         roomList2d[floor][room].material.color = col;
         roomList2d[floor][room].material.needsUpdate = true;
     }
-
-    if (_colorMap) {
-        if (floor === 'None') {
-            for (var floorKey in roomList) {
-                for (var roomKey in roomList[floorKey]) {
-                    var col = new Color(_getColor(roomKey, dataType, valueType));
-                    __applyColor3d(floorKey, roomKey, col);
-                    __applyColor2d(floorKey, roomKey, col);
-                }
-            }
-
-        } else {
-            for (var roomKey in roomList[floor]) {
-                __applyColor(floor, roomKey);
-            }
-        }
-
-    } else {
-        for (var floor in roomList) {
-            var col = new Color({r: 0.65098, g: 0.709804, b: 0.886275});
-            for (var key in roomList[floor]) {
-                roomList[floor][key].material.color = col;
-                roomList[floor][key].material.opacity = 0.38;
-                roomList[floor][key].material.transparent = true;
-                roomList[floor][key].material.needsUpdate = true;
-                __applyColor2d(floor, key, col);
-            }
+    
+    for (var floorKey in roomList) {
+        for (var roomKey in roomList[floorKey]) {
+            var col = new Color(_getColorValue(values[roomKey]));
+            __applyColor3d(floorKey, roomKey, col);
+            __applyColor2d(floorKey, roomKey, col);
         }
     }
+
 }
 
 function _clearColor() {
@@ -250,7 +221,7 @@ function clearAll() {
     THE Z coordinate for all rooms of a floor is the same!!!!
     So I need to compute it only once, for gods sake!!!
 */
-function pillarMap(dataType, valueType, floor) {
+function pillarMap(values, floor) {
 
     _pillarMap = !_pillarMap;
 
@@ -316,8 +287,6 @@ function pillarMap(dataType, valueType, floor) {
                         roomList[floor][room].geometry.boundingBox.min.z;
         var middle = (roomList[floor][room].geometry.boundingBox.max.z +
                         roomList[floor][room].geometry.boundingBox.min.z) / 2;
-        //console.log("ROOM: " + room + ". Height: " + height + ". Middle: " + middle);
-        //Geometry.roomList[floor][room].translateZ(((height * scale) - height) / 2 - (middle * scale - middle));
         roomList[floor][room].position.z += (((height * scale) - height) / 2 - (middle * scale - middle));
     }
 
@@ -330,7 +299,6 @@ function pillarMap(dataType, valueType, floor) {
                             roomList[_lastFloor][roomKey].geometry.boundingBox.min.z;
             var middle = (roomList[_lastFloor][roomKey].geometry.boundingBox.max.z +
                             roomList[_lastFloor][roomKey].geometry.boundingBox.min.z) / 2;
-            //console.log("ROOM: " + roomKey + ". Height: " + height + ". Middle: " + middle);
             roomList[_lastFloor][roomKey].position.z -= (((height * scale) - height) / 2 - (middle * scale - middle));
         }
         //__removeLines();
@@ -352,7 +320,7 @@ function pillarMap(dataType, valueType, floor) {
 
         } else {
             for (var roomKey in roomList[floor]) {
-                var scale = 1 + DataHandler.getRoomData(roomKey, dataType, valueType) * 3;
+                var scale = 1 + values[roomKey] * 3;
                 // Necessary to reverse scaling
                 _lastPillar[roomKey] = scale;
 
@@ -361,62 +329,114 @@ function pillarMap(dataType, valueType, floor) {
             }
         }
     }   
-
 }
 
-function _getGraphData(entity, dataType, valueType) {
-    var _label = [];
-    var _values = [];
-    if (entity === 'ap') {
+function _getAllData(dataFormat) {
+    var dataObject = {};
+    if (dataFormat.entity === 'ap') {
         for (var ap in apList) {
-            _label.push(ap);
-            _values.push(DataHandler.getAPdata(ap, valueType) * 100);
+            dataObject[ap] = DataHandler.getAPdata(ap, dataFormat);
         }
-    } else if (entity === 'room') {
+    } else if (dataFormat.entity === 'room') {
         for (var room of roomListString) {
-            _label.push(room.substring(4, ));
-            if (dataType === 'current') {
-                _values.push(DataHandler.getRoomData(room, dataType, valueType));
-            } else {
-                _values.push(DataHandler.getRoomData(room, dataType, valueType) * 100);
-            }
+            dataObject[room] = DataHandler.getRoomData(room, dataFormat);
         }
     } else {
-        statusMessage('No valid entity for graph: ' + entity, 'error');
-        console.log('No valid entity for graph: ' + entity);
-        return [];
+        statusMessage('Malformed data request', 'error');
     }
-    return [_label, _values];
+    return dataObject;
 }
 
-function displayGraph(entity, dataType, valueType, title, div) {
-    if (DataHandler.hasData()) {
-        var _graphDiv = document.getElementById(div);
-        _graphDiv.innerHTML = title;
-        var data = _getGraphData(entity, dataType, valueType);
-        var dynColor;
-        if (entity === 'ap') {
-            dynColor = function(ctx) {
-                return _getCSScolor(_colorMapAP[ctx.axisX.ticks[ctx.seriesIndex]]);
-            }
-        } else {
-            dynColor = function(ctx) {
-                return _getCSScolor(_getColorValue(ctx.value.y));
-            };
+function applyVisualization(data) {
+    if ('dataFormat' in data) {
+        var defaultData = _getAllData(data.dataFormat);
+    }
+    var ownData;
+    for (var key in data) {
+        switch (key) {
+            case 'dataFormat':
+                break;
+            case 'colorMap':
+                ownData = defaultData;
+                if (data[key].dataFormat != null) {
+                    ownData = _getAllData(data[key].dataFormat);
+                } else {
+                    colorMap(ownData);
+                    }
+                break;  
+            case 'pillarMap':
+                if (data[key].dataFormat != null) {
+                    ownData = _getAllData(data[key].dataFormat);
+                } else {
+                    /* We need a deep copy here because we modify the data */
+                    ownData = JSON.parse(JSON.stringify(defaultData));
+                }
+                /* pillar map needs values between 0 and 1 */
+                Object.keys(ownData).map(function(key) {
+                    ownData[key] /= 100; 
+                });
+                pillarMap(ownData, data[key].floor);
+                break;
+            case 'graph1':
+            case 'graph2':
+                ownData = defaultData;
+                var ent;
+                if (data[key].dataFormat != null) {
+                    ownData = _getAllData(data[key].dataFormat);
+                    ent = data[key].dataFormat.entity;
+                } else {
+                    ent  = data.dataFormat.entity;
+                }
+                var labels = Object.keys(ownData);
+                var values = Object.values(ownData);
+                /* Only use the number to fit all rooms on the graph */
+                if (ent === 'room') {
+                    labels = labels.map(function(x){ return x.substring(4, ) });
+                }
+                displayGraph(key, data[key].title, data[key].colorType, labels, values);
+                break;  
+            case 'apSphere':
+                apSphere();
+                break;
+            case 'makeTransparent':
+                makeTransparent(data[key].area, data[key].opac);
+                break;
+            case 'hideFloors':
+                hideFloors(data[key].floor);
+                break;
+            default:
+                statusMessage('No matching key in apply vis', 'error');
+                console.log('Key error: ' + key);
         }
+    }
+}
 
-        var chart = new Chartist.Bar('#' + div, {
-            labels: data[0],
-            series: data[1]
-        }, {
-            distributeSeries: true,
-            width: '100%',
-            chartPadding: {
-                bottom: 48
-            }
-        });
+function displayGraph(div, title, colorType, labels, values) {
+    var _graphDiv = document.getElementById(div);
+    _graphDiv.innerHTML = title;
+    var dynColor;
+    if (colorType === 'ap') {
+        dynColor = function(ctx) {
+            return _getCSScolor(_colorMapAP[ctx.axisX.ticks[ctx.seriesIndex]]);
+        }
+    } else if (colorType === 'heat') {
+        dynColor = function(ctx) {
+            return _getCSScolor(_getColorValue(ctx.value.y));
+        };
+    } 
+    var chart = new Chartist.Bar('#' + div, {
+        labels: labels,
+        series: values
+    }, {
+        distributeSeries: true,
+        width: '100%',
+        chartPadding: {
+            bottom: 48
+        }
+    });
 
-        /* Dynamically modify bar colors */
+    /* Dynamically modify bar colors */
+    if (colorType != 'default') {
         chart.on('draw', function(context) {
             if (context.type === 'bar') {
                 context.element.attr({
@@ -424,14 +444,12 @@ function displayGraph(entity, dataType, valueType, title, div) {
                 });
             }
         });
-        
-    } else {
-        statusMessage('No data available', 'error');
     }
 }
 
 /*
  * TODO: wall / all difference. Hardcoded materials of model 1 so far
+ * So arg 'all' has to be used all the time
  */
 function makeTransparent(arg, opac) {
     var _material = [];
@@ -461,4 +479,5 @@ function hideFloors(floor) {
 export {colorMap, pillarMap, apSphere, 
         hideFloors, makeTransparent, 
         displayGraph, initColorMap,
-        updateAPcolorMap, clearAll}
+        updateAPcolorMap, clearAll,
+        applyVisualization}

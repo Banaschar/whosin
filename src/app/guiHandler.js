@@ -71,7 +71,7 @@ function createMenu(sidebar, assetList) {
             event = window.event;
         }
         event.stopPropagation();
-        var text = 'Average Room usage in percent of room capacity';
+        var text = 'Average Room usage in percent. Normalized on room capacity';
         viewConcept1('roomCap', 'value', text);
     })));
     sub1.appendChild(createListEle(createButton('Avg. max. per Day', false, function(event){
@@ -79,7 +79,7 @@ function createMenu(sidebar, assetList) {
             event = window.event;
         }
         event.stopPropagation();
-        var text = 'Average Max. Room usage in percent of room capacity';
+        var text = 'Average max. room usage in percent. Normalized on room capacity';
         viewConcept1('roomCap', 'max', text);
     })));
     sub1.appendChild(createDropDown(['None'], ['None'], 'floorDropdown', function(event) {
@@ -108,7 +108,7 @@ function createMenu(sidebar, assetList) {
             event = window.event;
         }
         event.stopPropagation();
-        var text = 'Average Room usage in percent of Access Point capacity';
+        var text = 'Average Room usage in percent. Total AP value';
         viewConcept1('total', 'value', text);
     })));
     sub2.appendChild(createListEle(createButton('Avg. max. per Day', false, function(event){
@@ -116,7 +116,7 @@ function createMenu(sidebar, assetList) {
             event = window.event;
         }
         event.stopPropagation();
-        var text = 'Average Max. Room usage in percent of Access Point capacity';
+        var text = 'Average max. room usage in percent. Total AP value';
         viewConcept1('total', 'max', text);
     })));
     sub2.appendChild(createDropDown(['None'], ['None'], 'floorDropdown2', function(event) {
@@ -140,12 +140,16 @@ function createMenu(sidebar, assetList) {
     /* Additional menu elements */
     var item4 = createListEle(createA('#', 'Current total'));
     item4.addEventListener('click', function(event) {
-        Visualization.displayGraph('room', 'current', 'total', 'Current absolut connections, total per AP', 'graph2');
+        var data = new Graph2(new DataFormat('room', 'current', 'total'),
+                            'Current absolut connections, total of AP', 'heat');
+        Visualization.applyVisualization(data);
     })
     menu.appendChild(item4);
     var item5 = createListEle(createA('#', 'Current per room'));
     item5.addEventListener('click', function(event) {
-        Visualization.displayGraph('room', 'current', 'roomCap', 'Current absolut connections as fraction of capacity', 'graph2');
+        var data = new Graph2(new DataFormat('room', 'current', 'roomCap'),
+                            'Current absolut connections, normalized on capacity', 'heat');
+        Visualization.applyVisualization(data);
     })
     menu.appendChild(item5);
     var item6 = createListEle(createA('#', 'AP <-> Rooms'));
@@ -224,6 +228,81 @@ function initSideBar(container, assetList) {
 }
 
 
+
+
+var state = {
+    'concept1': false,
+    'floors': false,
+    'dataType': 'roomCap',
+    'dataValue': 'value'
+};
+
+function getCurrentState() {
+    return state;
+}
+
+/*
+ * Use to build data object to call Visualization.applyVisualization
+ * The object has the format:
+ * { 
+ *   dataFormat: optional, can be used by all following visualizations
+ *   visualizations: own parameters
+ * }
+ * visualizations are: graph, colormap, pillarmap etc. 
+ * Some of them can use their own dataFormat, if you want to display for example
+ * two graphs with differen data formats
+ */
+ function DataObject(dataFormat, args) {
+    this.dataFormat = dataFormat;
+    for (var i of args) {
+        Object.assign(this, i);
+    }
+ }
+
+function DataFormat(entity, dataType, dataValue) {
+    this.entity = entity;
+    this.dataType = dataType;
+    this.dataValue = dataValue;
+}
+
+function Graph1(dataFormat, title, colorType) {
+    this.graph1 = { 'dataFormat': dataFormat,
+                    'title': title,
+                    'colorType': colorType
+                };
+}
+
+function Graph2(dataFormat, title, colorType) {
+    this.graph2 = { 'dataFormat': dataFormat,
+                    'title': title,
+                    'colorType': colorType
+                };
+}
+
+function ColorMap(dataFormat) {
+    this.colorMap = { 'dataFormat': dataFormat };
+}
+
+function PillarMap(dataFormat, floor) {
+    this.pillarMap = { 'dataFormat': dataFormat,
+                        'floor': floor
+                    };
+}
+
+function APsphere(bool) {
+    this.apSphere = {'draw': bool}
+}
+
+function MakeTransparent(area, opac) {
+    this.makeTransparent = { 'area': area,
+                             'opac': opac
+                            };
+}
+
+function HideFloors(floor) {
+    this.hideFloors = { 'floor': floor };
+}
+
 /*-----------------------------------*/ 
  /*
  * Visualization Concepts
@@ -231,33 +310,28 @@ function initSideBar(container, assetList) {
  */
 /*-----------------------------------*/
 
-var state = {
-    'concept1': false,
-    'floors': false,
-    'dataType': 'roomCap',
-    'valueType': 'value'
-};
-
-function getCurrentState() {
-    return state;
-}
-
 /* 
  * Used example view concept:
  * Displays colormap and graph based on total AP data or room capacity dependant data
  */
-function viewConcept1(dataType, valueType, title) {
+function viewConcept1(dataType, dataValue, title) {
     if (DataHandler.hasData()) {
-        Visualization.makeTransparent('all', 0.3);
-        Visualization.colorMap(dataType, valueType, 'None');
-        Visualization.displayGraph('room', dataType, valueType, title, 'graph1');
         var max;
-        if (valueType === 'max') {
+        if (dataValue === 'max') {
             max = ' max.';
         } else { max = ''; }
-        Visualization.displayGraph('ap', null, valueType, 'Avg.' + max + ' AP utilization in percent of supported capacity', 'graph2');
+        var graph2title = 'Avg.' + max + ' AP utilization in percent of supported capacity'
+
+        var baseData = new DataFormat('room', dataType, dataValue);
+        var graph2data = new DataFormat('ap', null, dataValue);
+        var dataObj = new DataObject(baseData, [new MakeTransparent('all', 0.3),
+                        new ColorMap(null),
+                        new Graph1(null, title, 'heat'),
+                        new Graph2(graph2data, graph2title, 'ap')]);
+        console.log(dataObj);
+        Visualization.applyVisualization(dataObj);
         state.dataType = dataType;
-        state.valueType = valueType;
+        state.dataValue = dataValue;
     } else {
         EventHandler.statusMessage('No data available', 'error');
     }
@@ -266,17 +340,21 @@ function viewConcept1(dataType, valueType, title) {
 function floorView(dataType, menu) {
     var drop = document.getElementById(menu);
     var floor = drop.options[drop.selectedIndex].value;
-    Visualization.hideFloors(floor);
+    
     if (DataHandler.hasData()) {
-        Visualization.pillarMap(dataType, 'max', floor);
+        var data = new DataObject(new DataFormat('room', dataType, state.dataValue), 
+            [new HideFloors(floor),
+             new PillarMap(null, floor)]);
+        
     } else {
         EventHandler.statusMessage('No data available', 'error');
     }
+    Visualization.applyVisualization(data);
 }
 
 function changeTransparency() {
     var value = document.getElementById('transparencySlider').value;
-    Visualization.makeTransparent('all', value);
+    Visualization.applyVisualization(new MakeTransparent('all', value));
 }
 
 function getAPData() {
@@ -286,12 +364,14 @@ function getAPData() {
     }
     Visualization.clearAll();
     state.dataType = 'roomCap';
-    state.valueType = 'value';
+    state.dataValue = 'value';
 }
 
 function displayAccessPoints() {
-    Visualization.apSphere();
-    Visualization.displayGraph('ap', null, 'value', 'Avg. AP utiliation in percent of supported capacity', 'graph2');
+    var data = new DataObject(new DataFormat('ap', null, 'value'),     
+                [new APsphere(true),
+                 new Graph2(null, 'Avg. AP utiliation in percent of supported capacity', 'ap')]);
+    Visualization.applyVisualization(data);
 }
 
 function getModel() {

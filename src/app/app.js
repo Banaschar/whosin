@@ -38,6 +38,7 @@ function init() {
         var CONFIG = JSON.parse(CONF);
     } catch(err) {
         console.log('err');
+        console.log('Malformed config file');
         statusMessage('Malformed config file. Using base config', 'error');
         var CONFIG = config;
     }

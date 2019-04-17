@@ -20,7 +20,7 @@ function _projectY(chartRect, bounds, value) {
 
 function _createGraph(room) {
     var st = getCurrentState();
-    var values = totalAvgPerDay(room, st.dataType, st.valueType);
+    var values = totalAvgPerDay(room, st.dataType, st.dataValue);
     if (values) {
         var chart = new Chartist.Bar('#roomGraph', {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],

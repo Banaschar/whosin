@@ -206,29 +206,29 @@ function getPerAP(room) {
 }
 
 /*  
- * Get normalized data per room
+ * Get data per room
  */
-function getRoomData(room, dataType, valueType) {
+function getRoomData(room, dataFormat) {
     if (Conf.getRoomCapacity(room) === 0) {
         return 0;
     }
     var ap = Conf.getRoomAp(room);
 
-    switch(dataType) {
+    switch(dataFormat.dataType) {
         case 'roomCap':
-            var avg = getRoomPercentage(room) * (avgPerDay[ap][valueType].reduce(
-                        function(a,b) {return a + b;}, 0) / avgPerDay[ap][valueType].length);
+            var avg = getRoomPercentage(room) * (avgPerDay[ap][dataFormat.dataValue].reduce(
+                        function(a,b) {return a + b;}, 0) / avgPerDay[ap][dataFormat.dataValue].length);
             //console.log(room + ' avg: ' + avg + ', perc: ' + getRoomPercentage(room));
-            return avg / Conf.getRoomCapacity(room);
+            return (avg / Conf.getRoomCapacity(room)) * 100;
             break;
         case 'total':
-            var avg = avgPerDay[ap][valueType].reduce(
-                    function(a,b) {return a + b}, 0) / avgPerDay[ap][valueType].length;
-            return avg / Conf.getRoomCapacity(room);
+            var avg = avgPerDay[ap][dataFormat.dataValue].reduce(
+                    function(a,b) {return a + b}, 0) / avgPerDay[ap][dataFormat.dataValue].length;
+            return (avg / Conf.getRoomCapacity(room)) * 100;
             break;
         case 'current':
             //console.log('Current: ' + _current[Conf.getRoomAp(room)]);
-            if (valueType === 'roomCap') {
+            if (dataFormat.dataValue === 'roomCap') {
                 return _current[Conf.getRoomAp(room)] * getRoomPercentage(room);
             } else {
                 return _current[Conf.getRoomAp(room)];
@@ -241,9 +241,9 @@ function getRoomData(room, dataType, valueType) {
     }
 }
 
-function getAPdata(ap, valueType) {
-    return (avgPerDay[ap][valueType].reduce(function(a,b) {return a + b}, 0) /
-            avgPerDay[ap][valueType].length) / getApCapacity(ap);
+function getAPdata(ap, dataFormat) {
+    return ((avgPerDay[ap][dataFormat.dataValue].reduce(function(a,b) {return a + b}, 0) /
+            avgPerDay[ap][dataFormat.dataValue].length) / getApCapacity(ap)) * 100;
 }
 
 function hasData() {
